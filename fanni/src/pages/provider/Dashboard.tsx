@@ -10,6 +10,7 @@ import { cn, errorMessage, timeAgo } from '../../lib/utils';
 import { StatusBadge } from '../../components/cards';
 import { Badge, DemoBadge, EmptyState, ErrorBox, Spinner, Stars, Stat } from '../../components/ui';
 import { VerificationPanel } from './shared';
+import { TelegramCard } from './TelegramCard';
 
 type Tab = 'new' | 'active' | 'history';
 
@@ -101,6 +102,7 @@ export default function ProviderDashboard() {
 
       <ErrorBox message={error ?? data.error} />
       {!verified && <VerificationPanel />}
+      <TelegramCard />
 
       <div className="grid grid-cols-3 gap-3">
         <Stat label={`${provider.rating_count} تقييم`} value={provider.rating_count ? Number(provider.rating_avg).toFixed(1) : '—'} icon={<Star className="h-5 w-5" />} />
