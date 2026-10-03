@@ -1113,7 +1113,7 @@ end $$;
 create or replace function public.telegram_link_start() returns text
 language plpgsql security definer set search_path = public as $$
 declare
-  v_token text := encode(gen_random_bytes(16), 'hex');
+  v_token text := replace(gen_random_uuid()::text, '-', '');  -- core function, no pgcrypto needed
 begin
   if auth.uid() is null then
     raise exception 'not_allowed' using errcode = '42501';
