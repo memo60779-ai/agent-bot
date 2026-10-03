@@ -1,0 +1,227 @@
+// End-to-end smoke test of the three journeys on a phone-sized viewport.
+// Needs: the app running (npm run dev) against a SEEDED Supabase project.
+//   APP_URL=http://localhost:5173 node e2e/full-flow.mjs
+// Optional: CHROMIUM_PATH=/path/to/chrome, SHOTS=./e2e/screenshots
+import { chromium } from 'playwright';
+import { mkdirSync, writeFileSync } from 'node:fs';
+
+const APP = process.env.APP_URL ?? 'http://localhost:5173';
+const SHOTS = process.env.SHOTS ?? 'e2e/screenshots';
+const PASSWORD = 'Fanni@2026';
+const run = Date.now().toString(36);
+mkdirSync(SHOTS, { recursive: true });
+
+const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+const device = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: 'ar-IQ' };
+
+// a tiny PNG used for photo / portfolio / ID uploads
+const png = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+writeFileSync(`${SHOTS}/upload.png`, png);
+
+let step = 0;
+async function shot(page, name) {
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: `${SHOTS}/${String(++step).padStart(2, '0')}-${name}.png`, fullPage: false });
+}
+function ok(msg) { console.log(`  ✓ ${msg}`); }
+
+async function newUser() {
+  const ctx = await browser.newContext(device);
+  const page = await ctx.newPage();
+  page.on('pageerror', (e) => console.log('  [pageerror]', e.message));
+  return page;
+}
+
+async function login(page, email) {
+  await page.goto(`${APP}/login`);
+  await page.fill('input[type=email]', email);
+  await page.fill('input[type=password]', PASSWORD);
+  await page.click('button[type=submit]');
+  await page.waitForURL((u) => !u.pathname.startsWith('/login'));
+}
+
+async function register(page, { role, name, phone, email }) {
+  await page.goto(`${APP}/register${role === 'provider' ? '?role=provider' : ''}`);
+  await page.locator('form input').nth(0).fill(name);
+  await page.locator('form input').nth(1).fill(phone);
+  await page.locator('form input').nth(2).fill(email);
+  await page.locator('form input').nth(3).fill(PASSWORD);
+  await page.click('button[type=submit]');
+  await page.waitForURL((u) => !u.pathname.startsWith('/register'));
+}
+
+try {
+  // ------------------------------------------------------------ public
+  console.log('Public browsing');
+  const guest = await newUser();
+  await guest.goto(APP);
+  await guest.getByText('شنو تحتاج اليوم؟').waitFor();
+  await guest.getByText('سباكة').first().waitFor();
+  await shot(guest, 'home-guest');
+  await guest.fill('input[placeholder^="دوّر"]', 'سبلت');
+  await guest.getByRole('link', { name: 'تكييف وتبريد', exact: true }).waitFor();
+  if (await guest.getByRole('link', { name: 'نجارة', exact: true }).count()) throw new Error('search did not filter');
+  ok('home + search');
+  await guest.goto(`${APP}/services/plumbing`);
+  await guest.getByText('اطلب سباكة هسه').waitFor();
+  await shot(guest, 'service-plumbing');
+  await guest.locator('a[href^="/providers/"]').first().click();
+  await guest.getByText('معرض الأعمال').waitFor();
+  await guest.getByText('تقييمات الزبائن').waitFor();
+  await shot(guest, 'provider-profile');
+  ok('service page + provider profile');
+
+  // ------------------------------------------------------------ customer request
+  console.log('Customer journey');
+  const cust = await newUser();
+  const custEmail = `e2e-customer-${run}@example.com`;
+  await register(cust, { role: 'customer', name: `سارة اختبار ${run}`, phone: '07711112222', email: custEmail });
+  ok('registered customer');
+  await cust.goto(`${APP}/request/new?service=plumbing`);
+  await cust.getByText('شنو نوع المشكلة؟').waitFor();
+  await shot(cust, 'wizard-problem');
+  await cust.getByRole('button', { name: 'تسريب مي' }).click();
+  await cust.fill('textarea', 'اكو تسريب تحت المغسلة من يومين');
+  await cust.setInputFiles('input[type=file]', `${SHOTS}/upload.png`);
+  await shot(cust, 'wizard-description');
+  await cust.getByRole('button', { name: 'التالي' }).click();
+  await cust.locator('select').nth(2).selectOption('حي الحسين');
+  await cust.getByRole('button', { name: 'التالي' }).click();
+  await cust.getByRole('button', { name: 'هسه (مستعجل)' }).click();
+  await cust.getByRole('button', { name: 'التالي' }).click();
+  await cust.getByText('راجع طلبك').waitFor();
+  await shot(cust, 'wizard-review');
+  await cust.getByRole('button', { name: 'أرسل الطلب' }).click();
+  await cust.getByText('تم إرسال طلبك').waitFor();
+  await cust.getByText('الفنيين المناسبين لطلبك').waitFor();
+  await cust.getByRole('button', { name: 'طلب فني' }).first().waitFor();
+  await shot(cust, 'matching');
+  const requestUrl = cust.url().split('?')[0];
+  ok('request created + matching list shown');
+
+  // send to the test provider (حيدر كاظم) – he is in the same area so ranked first
+  const haider = cust.locator('div.rounded-3xl', { hasText: 'حيدر كاظم للسباكة' }).last();
+  await haider.getByRole('button', { name: 'طلب فني' }).click();
+  await haider.getByText('بانتظار رد الفني').waitFor();
+  ok('offer sent to provider@fanni.test');
+
+  // ------------------------------------------------------------ provider accepts
+  console.log('Provider journey (existing verified provider)');
+  const prov = await newUser();
+  await login(prov, 'provider@fanni.test');
+  await prov.getByText('متاح الآن').first().waitFor();
+  await shot(prov, 'provider-dashboard');
+  await prov.goto(requestUrl);
+  await prov.getByText('طلب جديد إلك').waitFor();
+  await shot(prov, 'provider-offer');
+  await prov.getByRole('button', { name: 'قبول الطلب' }).click();
+  await prov.getByText('07711112222').waitFor();
+  ok('accepted; customer phone revealed');
+  await prov.getByRole('button', { name: /طالع بالطريق/ }).click();
+  await prov.getByRole('button', { name: /وصلت وبديت الشغل/ }).click();
+  await prov.getByRole('button', { name: /خلصت الشغل/ }).click();
+  await prov.locator('span', { hasText: 'اكتمل' }).first().waitFor();
+  await shot(prov, 'provider-completed');
+  ok('ON_THE_WAY -> IN_PROGRESS -> COMPLETED');
+
+  // ------------------------------------------------------------ customer rates + complains
+  console.log('Customer rating + complaint');
+  await cust.goto(requestUrl);
+  await cust.getByText('شلون كان الفني؟').waitFor();
+  await cust.getByText('07700000003').waitFor();
+  await cust.getByRole('button', { name: '5 نجوم' }).first().click();
+  await cust.fill('textarea', 'شغل نظيف وسريع، شكراً');
+  await shot(cust, 'rate');
+  await cust.getByRole('button', { name: 'أرسل التقييم' }).click();
+  await cust.locator('span', { hasText: 'تم التقييم' }).first().waitFor();
+  ok('rated -> RATED');
+  await cust.getByRole('button', { name: /قدّم شكوى/ }).click();
+  await cust.locator('input').last().fill('السعر');
+  await cust.locator('textarea').last().fill(`اختبار شكوى ${run}`);
+  await cust.getByRole('button', { name: 'إرسال الشكوى' }).click();
+  await cust.locator('span', { hasText: 'مفتوحة' }).first().waitFor();
+  await shot(cust, 'complaint');
+  ok('complaint filed');
+
+  // ------------------------------------------------------------ new provider onboarding
+  console.log('New provider onboarding');
+  const np = await newUser();
+  const npEmail = `e2e-provider-${run}@example.com`;
+  await register(np, { role: 'provider', name: `كاظم اختبار ${run}`, phone: '07733334444', email: npEmail });
+  await np.waitForURL(/provider\/onboarding/);
+  await np.locator('select').nth(0).selectOption({ label: 'كهرباء' });
+  await np.locator('input[type=number]').fill('7');
+  await np.fill('textarea', 'كهربائي بيوت، تأسيس وصيانة وتركيب إنارة');
+  await shot(np, 'onboarding-profile');
+  await np.getByRole('button', { name: 'التالي' }).click();
+  await np.getByText('صور من شغلك').waitFor();
+  await np.setInputFiles('input[type=file][multiple]', `${SHOTS}/upload.png`);
+  await np.locator('img[src*="/storage/v1/object/public/portfolio/"], img[src*="/portfolio/"]').first().waitFor();
+  await np.getByRole('button', { name: 'التالي' }).click();
+  await np.getByText('وثّق حسابك').waitFor();
+  await np.setInputFiles('input[type=file]', `${SHOTS}/upload.png`);
+  await np.getByRole('button', { name: 'أرسل طلب التوثيق' }).click();
+  await np.waitForURL(/\/provider$/);
+  await np.getByText('طلب التوثيق قيد المراجعة').waitFor();
+  await shot(np, 'provider-pending');
+  ok('profile + portfolio + verification submitted (pending)');
+
+  // ------------------------------------------------------------ admin
+  console.log('Admin');
+  const admin = await newUser();
+  await login(admin, 'admin@fanni.test');
+  await admin.goto(`${APP}/admin`);
+  await admin.getByText('فنيين موثقين').waitFor();
+  await shot(admin, 'admin-overview');
+  await admin.goto(`${APP}/admin/verifications`);
+  const card = admin.locator('div.rounded-3xl', { hasText: `كاظم اختبار ${run}` }).last();
+  await card.waitFor();
+  await shot(admin, 'admin-verifications');
+  // private document opens through a short-lived signed URL
+  await card.getByRole('button', { name: /عرض المستند/ }).click();
+  await card.locator('img[alt="مستند التوثيق"][src*="token="]').waitFor();
+  await card.getByRole('button', { name: 'قبول' }).click();
+  await card.waitFor({ state: 'detached' });
+  ok('verification approved (doc viewed via signed URL)');
+  await admin.goto(`${APP}/admin/complaints`);
+  const comp = admin.locator('div.rounded-3xl', { hasText: `اختبار شكوى ${run}` }).last();
+  await comp.locator('select').selectOption('resolved');
+  await comp.locator('textarea').fill('تواصلنا ويا الفني وانحلت');
+  await comp.getByRole('button', { name: 'حفظ' }).click();
+  await admin.getByText(`اختبار شكوى ${run}`).waitFor({ state: 'detached' });
+  ok('complaint resolved with notes');
+  await admin.goto(`${APP}/admin/users`);
+  await admin.getByText(`سارة اختبار ${run}`).waitFor();
+  await shot(admin, 'admin-users');
+  await admin.goto(`${APP}/admin/services`);
+  await admin.getByText('تنظيف').waitFor();
+  ok('users + services pages');
+
+  // ------------------------------------------------------------ verified provider goes available
+  await np.reload();
+  await np.getByText('شغّلها حتى توصلك طلبات أكثر').waitFor(); // toggle unlocked after verification
+  await np.getByRole('button', { name: /غير متاح/ }).click();
+  await np.getByText('تطلع للزبائن بأول القائمة').waitFor();
+  await shot(np, 'provider-available');
+  ok('new provider verified -> Available Now');
+
+  // customer sees the admin's reply
+  await cust.goto(requestUrl);
+  await cust.getByText('رد الإدارة: تواصلنا ويا الفني وانحلت').waitFor();
+  ok('customer sees complaint resolution');
+
+  // privacy: other customer cannot open this request
+  const other = await newUser();
+  await login(other, 'customer1@demo.fanni.test');
+  await other.goto(requestUrl);
+  await other.getByText('ما عندك صلاحية تشوفه').waitFor();
+  ok('another customer cannot see the request');
+
+  console.log('\nALL E2E FLOWS PASSED');
+} catch (e) {
+  console.error('\nE2E FAILED:', e.message);
+  process.exitCode = 1;
+} finally {
+  await browser.close();
+}

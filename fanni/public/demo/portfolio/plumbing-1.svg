@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#203048"/><stop offset="1" stop-color="#34507a"/></linearGradient></defs>
+<rect width="600" height="600" fill="url(#g)"/>
+<g opacity=".08" fill="none" stroke="#fff" stroke-width="2"><circle cx="100" cy="120" r="40"/><circle cx="190" cy="280" r="52"/><circle cx="280" cy="440" r="64"/><circle cx="370" cy="120" r="76"/><circle cx="460" cy="280" r="88"/><circle cx="550" cy="440" r="100"/></g>
+<g transform="translate(180 150) scale(10)" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></g>
+<rect x="150" y="470" width="300" height="56" rx="28" fill="#000" fill-opacity=".25"/>
+<text x="300" y="507" text-anchor="middle" font-family="Tahoma, Arial, sans-serif" font-size="26" fill="#fff" direction="rtl">صورة تجريبية · شغل بأحد البيوت</text>
+</svg>
