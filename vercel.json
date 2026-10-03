@@ -1,0 +1,7 @@
+{
+  "installCommand": "cd fanni && npm ci",
+  "buildCommand": "cd fanni && npm run build",
+  "outputDirectory": "fanni/dist",
+  "framework": null,
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
