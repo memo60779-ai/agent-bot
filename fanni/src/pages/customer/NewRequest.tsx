@@ -130,13 +130,25 @@ export default function NewRequest() {
     <div>
       <PageHeader title="طلب خدمة جديد" back />
 
-      {/* progress */}
-      <div className="mb-5 flex gap-1.5">
-        {STEPS.map((s, i) => (
-          <div key={s} className={cn('h-1.5 flex-1 rounded-full', i <= step ? 'bg-accent' : 'bg-gray-200')} />
-        ))}
+      {/* progress: animated fill + current step name */}
+      <div className="mb-5">
+        <div className="mb-2 flex items-baseline justify-between">
+          <span key={step} className="animate-fade-up text-sm font-extrabold text-ink">{STEPS[step]}</span>
+          <span className="text-xs font-bold text-accent">{step + 1} / {STEPS.length}</span>
+        </div>
+        <div className="relative h-2 overflow-hidden rounded-full bg-gray-200">
+          <div
+            className="absolute inset-y-0 start-0 rounded-full bg-gradient-to-l from-accent to-[#FFA24D] transition-[width] duration-500 ease-out"
+            style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+          />
+        </div>
+        <div className="mt-2 flex justify-between">
+          {STEPS.map((s, i) => (
+            <span key={s} className={cn('h-2 w-2 rounded-full transition-all duration-300',
+              i < step ? 'bg-accent' : i === step ? 'scale-150 bg-accent' : 'bg-gray-300')} />
+          ))}
+        </div>
       </div>
-      <p className="mb-1 text-xs font-semibold text-accent">خطوة {step + 1} من {STEPS.length}</p>
 
       {target.data && (
         <div className="mb-4 flex items-center gap-3 rounded-2xl bg-primary-50 p-3">
@@ -147,6 +159,7 @@ export default function NewRequest() {
         </div>
       )}
 
+      <div key={step} className="animate-page-in pb-28">
       {step === 0 && (
         <section>
           <h2 className="mb-4 text-xl font-bold text-ink">شنو تحتاج؟</h2>
@@ -304,8 +317,10 @@ export default function NewRequest() {
         </section>
       )}
 
+      </div>
+
       {/* footer actions */}
-      <div className="fixed inset-x-0 bottom-[72px] z-20 mx-auto flex max-w-xl gap-2 bg-gradient-to-t from-surface via-surface px-4 pb-2 pt-4">
+      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-xl gap-2 bg-gradient-to-t from-surface via-surface px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-6">
         {step > 0 && (
           <Button variant="outline" onClick={() => setStep(step - 1)} className="w-28" disabled={submitting}>
             رجوع

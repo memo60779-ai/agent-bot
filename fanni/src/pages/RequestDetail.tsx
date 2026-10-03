@@ -11,6 +11,7 @@ import {
   COMPLAINT_LABEL, OFFER_LABEL, REVIEW_ASPECTS, STATUS_FLOW, STATUS_LABEL, TIME_SLOT_LABEL,
 } from '../lib/constants';
 import { cn, errorMessage, formatDate, signedUrl, telLink, timeAgo, whatsappLink } from '../lib/utils';
+import { celebrate, celebrateOnce } from '../lib/confetti';
 import { StatusBadge } from '../components/cards';
 import { ServiceIcon } from '../components/ServiceIcon';
 import {
@@ -64,6 +65,15 @@ export default function RequestDetail() {
     return () => { supabase.removeChannel(ch); };
   }, [id, reload]);
 
+  // 🎉 request sent, and once when a job is completed (customer + provider)
+  const sentFlag = params.get('sent');
+  const statusNow = data?.req.status;
+  useEffect(() => {
+    if (!data || !id) return;
+    if (sentFlag) celebrateOnce(`sent:${id}`);
+    if (statusNow === 'COMPLETED') celebrateOnce(`done:${id}:${profile?.id}`);
+  }, [id, sentFlag, statusNow, profile?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function act(fn: () => PromiseLike<{ error: unknown }>) {
     setBusy(true);
     setActionError(null);
@@ -98,7 +108,7 @@ export default function RequestDetail() {
       />
 
       {params.get('sent') && isCustomer && ['NEW', 'MATCHING'].includes(req.status) && (
-        <div className="flex items-center gap-3 rounded-3xl bg-emerald-50 p-4 text-emerald-800">
+        <div className="flex animate-pop items-center gap-3 rounded-3xl bg-emerald-50 p-4 text-emerald-800">
           <CheckCircle2 className="h-8 w-8 shrink-0" />
           <div>
             <p className="font-bold">تم إرسال طلبك 🎉</p>
@@ -262,32 +272,39 @@ export default function RequestDetail() {
 
 function Timeline({ req }: { req: ServiceRequest }) {
   if (['CANCELLED', 'NEW', 'MATCHING'].includes(req.status)) return null;
-  const current = STATUS_FLOW.indexOf(req.status === 'NEW' ? 'MATCHING' : req.status);
+  const current = STATUS_FLOW.indexOf(req.status);
+  const pct = (current / (STATUS_FLOW.length - 1)) * 100;
   return (
     <Card>
-      <ol className="relative space-y-4">
-        {STATUS_FLOW.map((s, i) => {
-          const done = i < current;
-          const active = i === current;
-          return (
-            <li key={s} className="flex items-center gap-3">
-              <span
-                className={cn(
-                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold',
-                  done && 'bg-primary text-white',
-                  active && 'bg-accent text-white ring-4 ring-accent/20',
-                  !done && !active && 'bg-gray-100 text-gray-400',
-                )}
-              >
-                {done ? <Check className="h-4 w-4" /> : i + 1}
-              </span>
-              <span className={cn('text-sm', active ? 'font-bold text-ink' : done ? 'text-ink' : 'text-gray-400')}>
-                {STATUS_LABEL[s]}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+      <div className="relative">
+        {/* track + animated fill (vertical, on the start side) */}
+        <div className="absolute bottom-3.5 start-[13px] top-3.5 w-0.5 rounded bg-gray-100" />
+        <div className="absolute start-[13px] top-3.5 w-0.5 rounded bg-primary transition-[height] duration-700 ease-out"
+          style={{ height: `calc((100% - 28px) * ${pct / 100})` }} />
+        <ol className="stagger relative space-y-4">
+          {STATUS_FLOW.map((s, i) => {
+            const done = i < current;
+            const active = i === current;
+            return (
+              <li key={s} className="flex items-center gap-3">
+                <span
+                  className={cn(
+                    'relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors duration-500',
+                    done && 'bg-primary text-white',
+                    active && 'animate-pulse-ring bg-accent text-white',
+                    !done && !active && 'bg-gray-100 text-gray-400',
+                  )}
+                >
+                  {done ? <Check className="h-4 w-4 animate-pop" /> : i + 1}
+                </span>
+                <span className={cn('text-sm', active ? 'font-extrabold text-ink' : done ? 'text-ink' : 'text-gray-400')}>
+                  {STATUS_LABEL[s]}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
     </Card>
   );
 }
@@ -442,7 +459,10 @@ function ReviewForm({ requestId, onDone }: { requestId: string; onDone: () => vo
     });
     setBusy(false);
     if (error) setErr(errorMessage(error));
-    else onDone();
+    else {
+      celebrate();
+      onDone();
+    }
   }
 
   return (

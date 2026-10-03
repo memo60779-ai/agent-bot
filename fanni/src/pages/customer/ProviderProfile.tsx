@@ -46,7 +46,7 @@ export default function ProviderProfile() {
   };
 
   return (
-    <div className="pb-24">
+    <div className="pb-36">
       <PageHeader title="ملف الفني" back />
 
       <div className="rounded-3xl bg-white p-5 text-center shadow-card">
@@ -134,7 +134,7 @@ export default function ProviderProfile() {
       )}
 
       {/* Sticky CTA */}
-      <div className="fixed inset-x-0 bottom-[72px] z-20 mx-auto max-w-xl px-4">
+      <div className="fixed inset-x-0 bottom-[104px] z-20 mx-auto max-w-xl px-4">
         <LinkButton to={`/request/new?service=${p.services?.slug}&provider=${p.id}`} variant="accent" full className="shadow-lg">
           طلب الخدمة من {p.display_name.split(' ')[0]}
         </LinkButton>

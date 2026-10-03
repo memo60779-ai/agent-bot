@@ -14,6 +14,7 @@ import Onboarding from './pages/provider/Onboarding';
 import ProviderDashboard from './pages/provider/Dashboard';
 import ProfileEdit from './pages/provider/ProfileEdit';
 import { Spinner } from './components/ui';
+import { Logo } from './components/Logo';
 
 // Admin is only used by a few people: keep it out of the customer bundle.
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
@@ -30,7 +31,7 @@ export default function App() {
   if (!isConfigured) {
     return (
       <div className="mx-auto max-w-md p-8 text-center">
-        <h1 className="text-2xl font-bold">فني<span className="text-accent">.</span></h1>
+        <Logo size={44} className="justify-center" />
         <p className="mt-4 text-gray-600">
           التطبيق ما مربوط بـ Supabase بعد. سوّي ملف <code dir="ltr">.env</code> من <code dir="ltr">.env.example</code>
           وحط <code dir="ltr">VITE_SUPABASE_URL</code> و <code dir="ltr">VITE_SUPABASE_ANON_KEY</code>.

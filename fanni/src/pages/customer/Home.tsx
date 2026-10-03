@@ -9,6 +9,7 @@ import { PROVINCE } from '../../lib/constants';
 import { ServiceIcon } from '../../components/ServiceIcon';
 import { ProviderCard, RequestCard } from '../../components/cards';
 import { ErrorBox, Spinner } from '../../components/ui';
+import { Logo } from '../../components/Logo';
 
 export default function Home() {
   const { profile } = useAuth();
@@ -70,11 +71,9 @@ export default function Home() {
           <div className="flex items-center gap-1.5 text-sm text-white/70">
             <MapPin className="h-4 w-4" /> {profile?.area ? `${profile.area}، ` : ''}{PROVINCE}
           </div>
-          <span className="text-xl font-extrabold tracking-tight">
-            فني<span className="text-accent">.</span>
-          </span>
+          <Logo size={34} light />
         </div>
-        <h1 className="mt-4 text-2xl font-bold leading-snug">
+        <h1 className="mt-5 animate-fade-up text-[26px] font-extrabold leading-snug">
           {firstName ? `هلا ${firstName}،` : 'هلا بيك،'}
           <br />
           شنو تحتاج اليوم؟
@@ -98,12 +97,12 @@ export default function Home() {
         ) : (
           <>
             <ErrorBox message={services.error} onRetry={services.reload} />
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+            <div className="stagger grid grid-cols-3 gap-3 sm:grid-cols-4">
               {filtered.map((s) => (
                 <Link
                   key={s.id}
                   to={`/services/${s.slug}`}
-                  className="flex flex-col items-center gap-2 rounded-3xl bg-white px-2 py-4 text-center shadow-card transition active:scale-95"
+                  className="pressable flex flex-col items-center gap-2 rounded-3xl bg-white px-2 py-4 text-center shadow-card transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
                   <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-50 text-accent">
                     <ServiceIcon name={s.icon} className="h-6 w-6" />
@@ -128,7 +127,7 @@ export default function Home() {
               الكل <ChevronLeft className="h-4 w-4" />
             </Link>
           </div>
-          <div className="space-y-3">
+          <div className="stagger space-y-3">
             {myRequests.data.map((r) => (
               <RequestCard key={r.id} r={r} to={`/requests/${r.id}`} />
             ))}
@@ -151,7 +150,7 @@ export default function Home() {
         {nearby.loading ? (
           <Spinner />
         ) : (
-          <div className="space-y-3">
+          <div className="stagger space-y-3">
             {(nearby.data ?? []).map((p) => (
               <ProviderCard key={p.id} p={p} />
             ))}

@@ -1,5 +1,5 @@
-import { NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
-import { ClipboardList, Home, LayoutDashboard, UserRound, Inbox, IdCard, Shield } from 'lucide-react';
+import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { ClipboardList, Home, LayoutDashboard, UserRound, Inbox, IdCard, Plus, Shield } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useAuth } from '../lib/auth';
 import type { UserRole } from '../lib/types';
@@ -12,12 +12,40 @@ function Tab({ to, icon, label, end }: { to: string; icon: ReactNode; label: str
       to={to}
       end={end}
       className={({ isActive }) =>
-        cn('flex flex-1 flex-col items-center gap-1 py-2 text-xs font-semibold', isActive ? 'text-primary' : 'text-gray-400')
+        cn('pressable relative flex flex-1 flex-col items-center gap-1 pb-2 pt-2.5 text-[11px] font-bold transition-colors',
+          isActive ? 'text-primary' : 'text-gray-400')
       }
     >
-      {icon}
-      {label}
+      {({ isActive }) => (
+        <>
+          <span className={cn('absolute top-0 h-1 rounded-b-full bg-accent transition-all duration-300',
+            isActive ? 'w-8 opacity-100' : 'w-0 opacity-0')} />
+          <span className={cn('transition-transform duration-300', isActive && '-translate-y-0.5 scale-110')}>{icon}</span>
+          {label}
+        </>
+      )}
     </NavLink>
+  );
+}
+
+/** Big raised center action: start a new request. */
+function RequestFab() {
+  const { pathname } = useLocation();
+  const active = pathname.startsWith('/request/new');
+  return (
+    <div className="relative flex flex-1 justify-center">
+      <Link
+        to="/request/new"
+        aria-label="اطلب خدمة"
+        className={cn(
+          'pressable absolute -top-8 flex h-14 w-14 flex-col items-center justify-center rounded-full bg-accent text-white shadow-lg shadow-accent/40 ring-4 ring-white',
+          !active && 'animate-pulse-ring',
+        )}
+      >
+        <Plus className={cn('h-7 w-7 transition-transform duration-300', active && 'rotate-45')} strokeWidth={2.6} />
+      </Link>
+      <span className="mt-auto pb-2 text-[11px] font-bold text-accent">اطلب</span>
+    </div>
   );
 }
 
@@ -27,14 +55,18 @@ export function AppShell() {
   const role = profile?.role;
   const ic = 'h-6 w-6';
   const wide = pathname.startsWith('/admin');
+  // admin sub-pages animate inside AdminLayout; animate the shell only between top-level sections
+  const transitionKey = wide ? '/admin' : pathname;
+  // focused flow: the request wizard has its own footer, so hide the tab bar
+  const hideNav = pathname.startsWith('/request/new');
 
   return (
     <div className={cn('mx-auto min-h-screen bg-surface', wide ? 'max-w-5xl' : 'max-w-xl')}>
-      <main className="px-4 pb-28 pt-1">
+      <main key={transitionKey} className="animate-page-in px-4 pb-32 pt-1">
         <Outlet />
       </main>
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
-        <div className="mx-auto flex max-w-xl">
+      {!hideNav && <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-100 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(32,48,72,.06)] backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-xl items-stretch">
           {role === 'provider' ? (
             <>
               <Tab to="/provider" end icon={<Inbox className={ic} />} label="الطلبات" />
@@ -45,12 +77,13 @@ export function AppShell() {
             <>
               <Tab to="/" end icon={<Home className={ic} />} label="الرئيسية" />
               <Tab to="/requests" icon={<ClipboardList className={ic} />} label="طلباتي" />
+              <RequestFab />
               {role === 'admin' && <Tab to="/admin" icon={<LayoutDashboard className={ic} />} label="الإدارة" />}
               <Tab to="/account" icon={<UserRound className={ic} />} label="حسابي" />
             </>
           )}
         </div>
-      </nav>
+      </nav>}
     </div>
   );
 }
