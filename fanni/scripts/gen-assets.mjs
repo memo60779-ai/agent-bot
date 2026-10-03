@@ -35,11 +35,13 @@ for (const [slug, icon] of Object.entries(SERVICES)) {
   });
 }
 
-const wrench = iconNode('wrench');
-const appIcon = (pad) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-<rect width="512" height="512" rx="${pad ? 0 : 112}" fill="#203048"/>
-<g transform="translate(${pad ? 156 : 136} ${pad ? 146 : 126}) scale(${pad ? 8.4 : 10})" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${wrench}</g>
-<circle cx="${pad ? 370 : 392}" cy="${pad ? 370 : 392}" r="${pad ? 30 : 38}" fill="#FF7700"/>
+const wrench = iconNode('wrench').replace('<path ', '<path fill="#fff" stroke="#fff" stroke-width="1.2" stroke-linejoin="round" ');
+// Same mark as src/components/Logo.tsx. Maskable: content scaled into the safe zone on a full-bleed square.
+const mark = `<path d="M104 246 L256 114 L408 246" fill="none" stroke="#FF7700" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+<g transform="translate(150 214) scale(9.2)">${wrench}</g>`;
+const appIcon = (maskable) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<rect width="512" height="512" rx="${maskable ? 0 : 120}" fill="#203048"/>
+${maskable ? `<g transform="translate(64 64) scale(0.75)">${mark}</g>` : mark}
 </svg>`;
 mkdirSync('public/icons', { recursive: true });
 writeFileSync('public/icons/icon.svg', appIcon(false));

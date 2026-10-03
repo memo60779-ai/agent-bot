@@ -52,7 +52,7 @@ export default function ServicePage() {
         فنيين {service.name_ar} بـ{PROVINCE} ({providers.length})
       </h2>
       {providers.length ? (
-        <div className="space-y-3">
+        <div className="stagger space-y-3">
           {providers.map((p) => (
             <ProviderCard
               key={p.id}

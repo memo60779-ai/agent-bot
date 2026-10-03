@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 
 const TABS = [
@@ -13,6 +13,7 @@ const TABS = [
 ] as const;
 
 export default function AdminLayout() {
+  const { pathname } = useLocation();
   return (
     <div>
       <div className="sticky top-0 z-20 -mx-4 bg-surface/95 px-4 pb-2 pt-3 backdrop-blur">
@@ -33,7 +34,7 @@ export default function AdminLayout() {
           ))}
         </div>
       </div>
-      <div className="pt-3">
+      <div key={pathname} className="animate-page-in pt-3">
         <Outlet />
       </div>
     </div>

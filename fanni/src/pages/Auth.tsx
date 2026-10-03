@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { cn, errorMessage, loginEmail, normalizePhone } from '../lib/utils';
 import { Button, ErrorBox, Field, Input } from '../components/ui';
+import { Logo } from '../components/Logo';
 
 function homeFor(role?: string) {
   return role === 'provider' ? '/provider' : role === 'admin' ? '/admin' : '/';
@@ -14,11 +15,11 @@ function AuthFrame({ title, subtitle, children }: { title: string; subtitle: str
   return (
     <div className="mx-auto min-h-screen max-w-md px-5 pb-10">
       <div className="-mx-5 mb-6 rounded-b-[2rem] bg-primary px-6 pb-8 pt-10 text-white">
-        <Link to="/" className="text-3xl font-extrabold">فني<span className="text-accent">.</span></Link>
+        <Link to="/" className="inline-block animate-pop"><Logo size={44} light /></Link>
         <h1 className="mt-6 text-2xl font-bold">{title}</h1>
         <p className="mt-1 text-white/70">{subtitle}</p>
       </div>
-      {children}
+      <div className="animate-fade-up">{children}</div>
     </div>
   );
 }

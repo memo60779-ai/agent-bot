@@ -23,7 +23,7 @@ export function Button({
       {...rest}
       disabled={disabled || loading}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition disabled:opacity-50 disabled:pointer-events-none',
+        'pressable inline-flex items-center justify-center gap-2 rounded-2xl font-bold transition disabled:opacity-50 disabled:pointer-events-none',
         size === 'lg' && 'min-h-[52px] px-5 text-base',
         size === 'md' && 'min-h-[44px] px-4 text-sm',
         size === 'sm' && 'min-h-[36px] px-3 text-sm rounded-xl',
@@ -45,7 +45,7 @@ export function LinkButton({ to, variant = 'primary', full, className, children 
     <Link
       to={to}
       className={cn(
-        'inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl px-5 text-base font-semibold transition',
+        'pressable inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl px-5 text-base font-bold transition',
         VARIANTS[variant], full && 'w-full', className,
       )}
     >

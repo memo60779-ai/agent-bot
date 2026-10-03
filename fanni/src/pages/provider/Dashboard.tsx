@@ -124,7 +124,7 @@ export default function ProviderDashboard() {
       </div>
 
       {data.loading && !data.data ? <Spinner /> : (
-        <div className="space-y-3">
+        <div className="stagger space-y-3">
           {tab === 'new' && (data.data?.offers.length ? data.data.offers.map((o) => {
             const r = o.service_requests!;
             return (

@@ -43,7 +43,7 @@ export default function MyRequests() {
       {loading ? (
         <Spinner />
       ) : list.length ? (
-        <div className="space-y-3">
+        <div className="stagger space-y-3">
           {list.map((r) => <RequestCard key={r.id} r={r} to={`/requests/${r.id}`} />)}
         </div>
       ) : (
