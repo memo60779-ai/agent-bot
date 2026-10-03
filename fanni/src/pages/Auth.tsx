@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Home, Wrench } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
-import { cn, errorMessage } from '../lib/utils';
+import { cn, errorMessage, loginEmail, normalizePhone } from '../lib/utils';
 import { Button, ErrorBox, Field, Input } from '../components/ui';
 
 function homeFor(role?: string) {
@@ -27,7 +27,7 @@ export function Login() {
   const [params] = useSearchParams();
   const nav = useNavigate();
   const { profile, session } = useAuth();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +40,7 @@ export function Login() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail(identifier), password });
     if (error) {
       setError(errorMessage(error));
       setBusy(false);
@@ -50,8 +50,8 @@ export function Login() {
   return (
     <AuthFrame title="هلا بيك من جديد" subtitle="سجّل دخولك حتى تكمل">
       <form onSubmit={submit} className="space-y-4">
-        <Field label="الإيميل">
-          <Input type="email" dir="ltr" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Field label="رقم الموبايل" hint="أو الإيميل إذا سجلت بيه">
+          <Input dir="ltr" inputMode="tel" autoComplete="username" placeholder="07XXXXXXXXX" required value={identifier} onChange={(e) => setIdentifier(e.target.value)} />
         </Field>
         <Field label="الرمز السري">
           <Input type="password" dir="ltr" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
@@ -76,11 +76,9 @@ export function Register() {
   const [role, setRole] = useState<'customer' | 'provider'>(params.get('role') === 'provider' ? 'provider' : 'customer');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [checkEmail, setCheckEmail] = useState(false);
 
   useEffect(() => {
     if (session && profile) {
@@ -88,30 +86,23 @@ export function Register() {
     }
   }, [session, profile]); // eslint-disable-line
 
-  const phoneOk = /^07\d{9}$/.test(phone.replace(/\s/g, ''));
-
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!phoneOk) return setError('رقم الموبايل لازم يبدي بـ07 ويكون 11 رقم');
+    const normalized = normalizePhone(phone);
+    if (!normalized) return setError('رقم الموبايل لازم يبدي بـ07 ويكون 11 رقم');
     setBusy(true);
     setError(null);
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: { data: { full_name: fullName.trim(), phone: phone.replace(/\s/g, ''), role } },
+    // Phone account: created by a DB function (no email / SMS needed), then a normal login.
+    const { data: email, error } = await supabase.rpc('phone_signup', {
+      p_phone: normalized, p_password: password, p_full_name: fullName.trim(), p_role: role,
     });
+    if (error) {
+      setBusy(false);
+      return setError(errorMessage(error));
+    }
+    const { error: loginError } = await supabase.auth.signInWithPassword({ email: email as string, password });
     setBusy(false);
-    if (error) return setError(errorMessage(error));
-    if (!data.session) setCheckEmail(true); // email confirmation is enabled on the project
-  }
-
-  if (checkEmail) {
-    return (
-      <AuthFrame title="تأكد من إيميلك" subtitle="دزينالك رابط تفعيل">
-        <p className="text-center text-gray-600">افتح الإيميل ({email}) واضغط على رابط التفعيل، بعدها سجّل دخول.</p>
-        <Link to="/login" className="mt-6 block text-center font-semibold text-primary">تسجيل الدخول</Link>
-      </AuthFrame>
-    );
+    if (loginError) setError(errorMessage(loginError));
   }
 
   return (
@@ -139,13 +130,10 @@ export function Register() {
         <Field label={role === 'provider' ? 'الاسم الكامل' : 'الاسم'}>
           <Input required value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" />
         </Field>
-        <Field label="رقم الموبايل" hint="يظهر للطرف الثاني بس بعد قبول الطلب">
-          <Input required dir="ltr" inputMode="tel" placeholder="07XXXXXXXXX" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <Field label="رقم الموبايل" hint="تسجل دخول بيه. يظهر للطرف الثاني بس بعد قبول الطلب">
+          <Input required dir="ltr" inputMode="tel" autoComplete="username" placeholder="07XXXXXXXXX" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </Field>
-        <Field label="الإيميل">
-          <Input required type="email" dir="ltr" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </Field>
-        <Field label="الرمز السري" hint="6 أحرف أو أكثر">
+        <Field label="الرمز السري" hint="6 أحرف أو أرقام أو أكثر — احفظه زين">
           <Input required type="password" dir="ltr" minLength={6} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </Field>
         <ErrorBox message={error} />

@@ -8,7 +8,7 @@ import type {
   Complaint, ComplaintStatus, Profile, Provider, RequestStatus, Review, Service, ServiceRequest, UserRole,
 } from '../../lib/types';
 import { COMPLAINT_LABEL, STATUS_LABEL, VERIFICATION_LABEL } from '../../lib/constants';
-import { cn, errorMessage, formatDate, timeAgo } from '../../lib/utils';
+import { cn, errorMessage, formatDate, isPhoneAccount, timeAgo } from '../../lib/utils';
 import { StatusBadge } from '../../components/cards';
 import { ICON_NAMES, ServiceIcon } from '../../components/ServiceIcon';
 import {
@@ -56,6 +56,15 @@ export function AdminUsers() {
     (!q || u.full_name.includes(q) || u.email?.includes(q) || u.phone?.includes(q)),
   ), [users.data, q, role]);
 
+  async function resetPassword(u: Profile) {
+    const pw = prompt(`رمز جديد لـ ${u.full_name} (6 أحرف أو أكثر):`);
+    if (!pw) return;
+    setErr(null);
+    const { error } = await supabase.rpc('admin_reset_password', { p_user_id: u.id, p_password: pw });
+    if (error) setErr(errorMessage(error));
+    else alert('تم تغيير الرمز. بلّغ صاحب الحساب بالرمز الجديد.');
+  }
+
   async function setUser(id: string, patch: { p_role?: UserRole; p_is_active?: boolean }) {
     setErr(null);
     const { error } = await supabase.rpc('admin_set_user', { p_user_id: id, p_role: null, p_is_active: null, ...patch });
@@ -81,7 +90,9 @@ export function AdminUsers() {
                     <DemoBadge show={u.is_demo} />
                     {!u.is_active && <Badge tone="red">موقوف</Badge>}
                   </div>
-                  <p className="truncate text-sm text-gray-500" dir="ltr">{u.email} · {u.phone}</p>
+                  <p className="truncate text-sm text-gray-500" dir="ltr">
+                    {isPhoneAccount(u.email) ? u.phone : `${u.email} · ${u.phone ?? ''}`}
+                  </p>
                   <p className="text-xs text-gray-400">سجّل {formatDate(u.created_at)} · {u.area ?? '—'}</p>
                 </div>
               </div>
@@ -95,6 +106,7 @@ export function AdminUsers() {
                   <Button size="sm" variant={u.is_active ? 'danger' : 'primary'} onClick={() => setUser(u.id, { p_is_active: !u.is_active })}>
                     {u.is_active ? 'إيقاف' : 'تفعيل'}
                   </Button>
+                  <Button size="sm" variant="outline" onClick={() => resetPassword(u)}>الرمز</Button>
                 </div>
               )}
             </Card>
