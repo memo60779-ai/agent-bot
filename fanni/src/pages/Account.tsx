@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { Camera, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { CITIES, CITY_NAMES } from '../lib/constants';
-import { errorMessage } from '../lib/utils';
+import { errorMessage, publicUrl, uploadFile } from '../lib/utils';
 import { Avatar, Badge, Button, Card, ErrorBox, Field, Input, PageHeader, Select } from '../components/ui';
 
 const ROLE_LABEL = { customer: 'زبون', provider: 'فني', admin: 'مدير' } as const;
@@ -19,8 +19,25 @@ export default function Account() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   if (!profile) return null;
+
+  async function changeAvatar(file: File | undefined) {
+    if (!file) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const url = publicUrl('avatars', await uploadFile('avatars', profile!.id, file));
+      const { error } = await supabase.from('users').update({ avatar_url: url }).eq('id', profile!.id);
+      if (error) throw error;
+      await refresh();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function save() {
     setBusy(true);
@@ -40,7 +57,14 @@ export default function Account() {
     <div className="space-y-4">
       <PageHeader title="حسابي" />
       <Card className="flex items-center gap-3">
-        <Avatar name={profile.full_name || '؟'} url={profile.avatar_url} size={56} />
+        <label className="relative cursor-pointer" aria-label="تغيير الصورة">
+          <Avatar name={profile.full_name || '؟'} url={profile.avatar_url} size={56} />
+          <span className="absolute -bottom-1 -end-1 rounded-full bg-accent p-1.5 text-white">
+            <Camera className={uploading ? 'h-3 w-3 animate-pulse' : 'h-3 w-3'} />
+          </span>
+          <input type="file" accept="image/*" className="hidden" disabled={uploading}
+            onChange={(e) => changeAvatar(e.target.files?.[0])} />
+        </label>
         <div className="flex-1">
           <p className="font-bold text-ink">{profile.full_name}</p>
           <p className="text-sm text-gray-500" dir="ltr">{profile.email}</p>
