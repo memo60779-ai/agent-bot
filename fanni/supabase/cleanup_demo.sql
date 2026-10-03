@@ -7,7 +7,10 @@
 --
 -- ⚠️ This also deletes the demo ADMIN (admin@fanni.test). Before running,
 -- create your real admin account and promote it:
+--   begin;
+--   select set_config('fanni.system', 'on', true);  -- role changes are trigger-protected
 --   update public.users set role = 'admin' where email = 'you@yourdomain.com';
+--   commit;
 -- =====================================================================
 begin;
 
