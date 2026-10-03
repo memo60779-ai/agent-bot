@@ -4,7 +4,7 @@ import { Camera, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { CITIES, CITY_NAMES } from '../lib/constants';
-import { errorMessage, publicUrl, uploadFile } from '../lib/utils';
+import { errorMessage, isPhoneAccount, publicUrl, uploadFile } from '../lib/utils';
 import { Avatar, Badge, Button, Card, ErrorBox, Field, Input, PageHeader, Select } from '../components/ui';
 
 const ROLE_LABEL = { customer: 'زبون', provider: 'فني', admin: 'مدير' } as const;
@@ -67,14 +67,16 @@ export default function Account() {
         </label>
         <div className="flex-1">
           <p className="font-bold text-ink">{profile.full_name}</p>
-          <p className="text-sm text-gray-500" dir="ltr">{profile.email}</p>
+          <p className="text-sm text-gray-500" dir="ltr">{isPhoneAccount(profile.email) ? profile.phone : profile.email}</p>
         </div>
         <Badge tone="blue">{ROLE_LABEL[profile.role]}</Badge>
       </Card>
 
       <Card className="space-y-4">
         <Field label="الاسم"><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>
-        <Field label="رقم الموبايل"><Input dir="ltr" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} /></Field>
+        <Field label="رقم الموبايل" hint={isPhoneAccount(profile.email) ? 'هذا رقم الدخول مالتك. لتغييره تواصل ويا الإدارة' : undefined}>
+          <Input dir="ltr" inputMode="tel" value={phone} disabled={isPhoneAccount(profile.email)} onChange={(e) => setPhone(e.target.value)} />
+        </Field>
         <Field label="المدينة">
           <Select value={city} onChange={(e) => { setCity(e.target.value); setArea(''); }}>
             {CITY_NAMES.map((c) => <option key={c}>{c}</option>)}

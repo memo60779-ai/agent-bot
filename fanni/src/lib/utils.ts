@@ -19,7 +19,11 @@ const ERRORS: Record<string, string> = {
   verification_already_verified: 'حسابك موثق',
   invalid_document_path: 'ملف التوثيق غير صالح',
   cannot_change_self: 'ما تگدر تعطل حسابك أو تغير دورك',
-  'Invalid login credentials': 'الإيميل أو الرمز غلط',
+  'Invalid login credentials': 'الرقم أو الرمز غلط',
+  invalid_phone: 'رقم الموبايل لازم يبدي بـ07 ويكون 11 رقم',
+  phone_taken: 'هذا الرقم مسجل من قبل، سجّل دخول',
+  weak_password: 'الرمز لازم يكون 6 أحرف أو أكثر',
+  name_required: 'اكتب اسمك',
   'User already registered': 'هذا الإيميل مسجل من قبل، سجّل دخول',
   'Email not confirmed': 'لازم تأكد الإيميل أول',
 };
@@ -34,6 +38,30 @@ export function errorMessage(err: unknown): string {
   if (raw.toLowerCase().includes('password')) return 'الرمز لازم يكون 6 أحرف أو أكثر';
   if (raw.includes('Failed to fetch')) return 'ماكو اتصال بالإنترنت أو السيرفر';
   return raw;
+}
+
+// Phone accounts log in with an internal address (never shown or emailed).
+export const PHONE_EMAIL_DOMAIN = 'users.fanni.app';
+
+/** 07XXXXXXXXX from Arabic digits / spaces / +964 / 7XXXXXXXXX, or null. Mirrors SQL normalize_iq_phone. */
+export function normalizePhone(input: string): string | null {
+  let v = input
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/\D/g, '');
+  if (v.startsWith('9647')) v = '0' + v.slice(3);
+  if (v.startsWith('7') && v.length === 10) v = '0' + v;
+  return /^07\d{9}$/.test(v) ? v : null;
+}
+
+/** Login identifier → auth email: a phone maps to its internal address, an email stays as is. */
+export function loginEmail(input: string): string {
+  const phone = normalizePhone(input);
+  return phone ? `${phone}@${PHONE_EMAIL_DOMAIN}` : input.trim();
+}
+
+export function isPhoneAccount(email: string | null | undefined): boolean {
+  return !!email?.endsWith(`@${PHONE_EMAIL_DOMAIN}`);
 }
 
 export function timeAgo(iso: string): string {

@@ -9,6 +9,10 @@ const APP = process.env.APP_URL ?? 'http://localhost:5173';
 const SHOTS = process.env.SHOTS ?? 'e2e/screenshots';
 const PASSWORD = 'Fanni@2026';
 const run = Date.now().toString(36);
+const uniq = String(Date.now()).slice(-7);
+const CUST_PHONE = `0771${uniq}`;
+const PROV_PHONE = `0773${uniq}`;
+const toArabicDigits = (v) => v.replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
 mkdirSync(SHOTS, { recursive: true });
 
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
@@ -33,20 +37,19 @@ async function newUser() {
   return page;
 }
 
-async function login(page, email) {
+async function login(page, identifier) {
   await page.goto(`${APP}/login`);
-  await page.fill('input[type=email]', email);
+  await page.locator('form input').nth(0).fill(identifier);
   await page.fill('input[type=password]', PASSWORD);
   await page.click('button[type=submit]');
   await page.waitForURL((u) => !u.pathname.startsWith('/login'));
 }
 
-async function register(page, { role, name, phone, email }) {
+async function register(page, { role, name, phone }) {
   await page.goto(`${APP}/register${role === 'provider' ? '?role=provider' : ''}`);
   await page.locator('form input').nth(0).fill(name);
   await page.locator('form input').nth(1).fill(phone);
-  await page.locator('form input').nth(2).fill(email);
-  await page.locator('form input').nth(3).fill(PASSWORD);
+  await page.locator('form input').nth(2).fill(PASSWORD);
   await page.click('button[type=submit]');
   await page.waitForURL((u) => !u.pathname.startsWith('/register'));
 }
@@ -75,9 +78,13 @@ try {
   // ------------------------------------------------------------ customer request
   console.log('Customer journey');
   const cust = await newUser();
-  const custEmail = `e2e-customer-${run}@example.com`;
-  await register(cust, { role: 'customer', name: `سارة اختبار ${run}`, phone: '07711112222', email: custEmail });
-  ok('registered customer');
+  // typed with Arabic digits + spaces, like many Iraqi keyboards do
+  await register(cust, { role: 'customer', name: `سارة اختبار ${run}`, phone: toArabicDigits(`${CUST_PHONE.slice(0, 4)} ${CUST_PHONE.slice(4)}`) });
+  ok('registered customer with phone number (Arabic digits)');
+  await cust.goto(`${APP}/account`);
+  await cust.getByRole('button', { name: /تسجيل خروج/ }).click();
+  await login(cust, CUST_PHONE);
+  ok('logged back in with phone number');
   await cust.goto(`${APP}/request/new?service=plumbing`);
   await cust.getByText('شنو نوع المشكلة؟').waitFor();
   await shot(cust, 'wizard-problem');
@@ -116,7 +123,7 @@ try {
   await prov.getByText('طلب جديد إلك').waitFor();
   await shot(prov, 'provider-offer');
   await prov.getByRole('button', { name: 'قبول الطلب' }).click();
-  await prov.getByText('07711112222').waitFor();
+  await prov.getByText(CUST_PHONE).waitFor();
   ok('accepted; customer phone revealed');
   await prov.getByRole('button', { name: /طالع بالطريق/ }).click();
   await prov.getByRole('button', { name: /وصلت وبديت الشغل/ }).click();
@@ -147,8 +154,7 @@ try {
   // ------------------------------------------------------------ new provider onboarding
   console.log('New provider onboarding');
   const np = await newUser();
-  const npEmail = `e2e-provider-${run}@example.com`;
-  await register(np, { role: 'provider', name: `كاظم اختبار ${run}`, phone: '07733334444', email: npEmail });
+  await register(np, { role: 'provider', name: `كاظم اختبار ${run}`, phone: PROV_PHONE });
   await np.waitForURL(/provider\/onboarding/);
   await np.locator('select').nth(0).selectOption({ label: 'كهرباء' });
   await np.locator('input[type=number]').fill('7');
