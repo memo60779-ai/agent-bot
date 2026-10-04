@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useLoad } from '../../lib/useLoad';
 import { ErrorBox, Spinner } from '../../components/ui';
+import { TelegramCard } from '../provider/TelegramCard';
 
 interface Stats {
   customers: number; providers: number; verified_providers: number; pending_verifications: number;
@@ -48,6 +49,11 @@ export default function Overview() {
           <Clock className="h-6 w-6" /> {s.pending_verifications} طلب توثيق بانتظار المراجعة
         </Link>
       )}
+      <TelegramCard
+        title="إشعارات الإدارة"
+        text="تجيك رسالة على تليكرام أول ما يقدّم فني على التوثيق، حتى توافق بدقيقة."
+        linkedText="توصلك طلبات التوثيق الجديدة فوراً"
+      />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         <Tile label="العملاء" value={s.customers} icon={<Users className={ic} />} to="/admin/users" />
         <Tile label="الفنيين" value={s.providers} icon={<Wrench className={ic} />} to="/admin/providers" />

@@ -129,6 +129,21 @@ export function AdminProviders() {
   const list = (providers.data ?? []).filter((p) =>
     (status === 'all' || p.verification_status === status) && (!q || p.display_name.includes(q) || p.area.includes(q)));
 
+  const [verr, setVerr] = useState<string | null>(null);
+  async function setVerification(p: Provider, decision: 'verified' | 'rejected') {
+    const msg = decision === 'verified'
+      ? `توثّق «${p.display_name}» مباشرة؟ (شفت هويته شخصياً)`
+      : `تسحب التوثيق من «${p.display_name}»؟ ما راح يطلع للزبائن.`;
+    if (!confirm(msg)) return;
+    setVerr(null);
+    const { error } = await supabase.rpc('admin_set_verification', {
+      p_provider_id: p.id, p_decision: decision,
+      p_notes: decision === 'verified' ? 'توثيق شخصي من الإدارة' : 'سحب التوثيق من الإدارة',
+    });
+    if (error) setVerr(errorMessage(error));
+    providers.reload();
+  }
+
   async function toggleAvailable(p: Provider) {
     await supabase.from('providers').update({ is_available: !p.is_available }).eq('id', p.id);
     providers.reload();
@@ -139,7 +154,7 @@ export function AdminProviders() {
       <SearchBox value={q} onChange={setQ} placeholder="اسم الفني أو المنطقة" />
       <Pills options={['all', 'verified', 'pending', 'needs_info', 'rejected', 'unverified']} value={status} onChange={setStatus}
         label={(s) => (s === 'all' ? 'الكل' : VERIFICATION_LABEL[s as keyof typeof VERIFICATION_LABEL])} />
-      <ErrorBox message={providers.error} />
+      <ErrorBox message={verr ?? providers.error} />
       {providers.loading ? <Spinner /> : list.map((p) => (
         <Card key={p.id} className="space-y-2">
           <div className="flex items-start justify-between gap-2">
@@ -162,7 +177,11 @@ export function AdminProviders() {
             <Badge tone={p.is_available ? 'green' : 'gray'}>{p.is_available ? 'متاح' : 'غير متاح'}</Badge>
             <div className="flex-1" />
             {p.is_available && <Button size="sm" variant="outline" onClick={() => toggleAvailable(p)}>إيقاف التوفر</Button>}
-            <Link to="/admin/verifications" className="text-sm font-semibold text-primary">التوثيق</Link>
+            {p.verification_status === 'verified' ? (
+              <Button size="sm" variant="danger" onClick={() => setVerification(p, 'rejected')}>سحب التوثيق</Button>
+            ) : (
+              <Button size="sm" onClick={() => setVerification(p, 'verified')}>توثيق مباشر ✓</Button>
+            )}
           </div>
         </Card>
       ))}
