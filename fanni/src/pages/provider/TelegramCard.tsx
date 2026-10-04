@@ -7,8 +7,12 @@ import { Button, Card, ErrorBox } from '../../components/ui';
 
 const BOT = import.meta.env.VITE_TELEGRAM_BOT as string | undefined;
 
-/** Lets a provider receive new-request alerts on Telegram. */
-export function TelegramCard() {
+/** Links the signed-in user's Telegram (providers: new requests; admins: verification queue). */
+export function TelegramCard({
+  title = 'لا تفوّت أي طلب',
+  text = 'فعّل الإشعارات وتجيك رسالة على تليكرام أول ما يوصلك طلب.',
+  linkedText = 'أي طلب جديد يوصلك رسالة فوراً',
+}: { title?: string; text?: string; linkedText?: string } = {}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const status = useLoad(async () => {
@@ -44,7 +48,7 @@ export function TelegramCard() {
         <CheckCircle2 className="h-7 w-7 shrink-0 text-emerald-600" />
         <div className="flex-1">
           <p className="font-bold text-ink">إشعارات تليكرام مفعّلة</p>
-          <p className="text-sm text-gray-500">أي طلب جديد يوصلك رسالة فوراً</p>
+          <p className="text-sm text-gray-500">{linkedText}</p>
         </div>
         <button onClick={unlink} className="text-sm font-semibold text-gray-400">إيقاف</button>
       </Card>
@@ -56,8 +60,8 @@ export function TelegramCard() {
       <div className="flex items-center gap-3">
         <BellRing className="h-7 w-7 shrink-0 text-[#229ED9]" />
         <div>
-          <p className="font-bold text-ink">لا تفوّت أي طلب</p>
-          <p className="text-sm text-gray-500">فعّل الإشعارات وتجيك رسالة على تليكرام أول ما يوصلك طلب.</p>
+          <p className="font-bold text-ink">{title}</p>
+          <p className="text-sm text-gray-500">{text}</p>
         </div>
       </div>
       <ErrorBox message={error} />
