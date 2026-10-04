@@ -10,7 +10,7 @@ import type {
 import { COMPLAINT_LABEL, STATUS_LABEL, VERIFICATION_LABEL } from '../../lib/constants';
 import { cn, errorMessage, formatDate, isPhoneAccount, timeAgo } from '../../lib/utils';
 import { StatusBadge } from '../../components/cards';
-import { ICON_NAMES, ServiceIcon } from '../../components/ServiceIcon';
+import { ICON_NAMES, ServiceBadge } from '../../components/ServiceIcon';
 import {
   Badge, Button, Card, DemoBadge, EmptyState, ErrorBox, Input, RatingInline, Select, Spinner, Stars, Textarea,
 } from '../../components/ui';
@@ -218,7 +218,7 @@ function ServiceEditor({ s, onSaved }: { s?: Service; onSaved: () => void }) {
   if (!open && s) {
     return (
       <Card className="flex items-center gap-3">
-        <span className="rounded-xl bg-accent-50 p-2 text-accent"><ServiceIcon name={s.icon} className="h-5 w-5" /></span>
+        <ServiceBadge icon={s.icon} size={40} />
         <div className="flex-1">
           <p className="font-bold text-ink">{s.name_ar}</p>
           <p className="text-xs text-gray-500">{s.problem_types.length} نوع مشكلة · ترتيب {s.sort_order}</p>

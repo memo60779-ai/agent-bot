@@ -6,7 +6,7 @@ import { useAuth } from '../../lib/auth';
 import { must, useLoad } from '../../lib/useLoad';
 import type { Provider, Service, ServiceRequest } from '../../lib/types';
 import { PROVINCE } from '../../lib/constants';
-import { ServiceIcon } from '../../components/ServiceIcon';
+import { ServiceBadge } from '../../components/ServiceIcon';
 import { ProviderCard, RequestCard } from '../../components/cards';
 import { ErrorBox, Spinner } from '../../components/ui';
 import { Logo } from '../../components/Logo';
@@ -102,12 +102,10 @@ export default function Home() {
                 <Link
                   key={s.id}
                   to={`/services/${s.slug}`}
-                  className="pressable flex flex-col items-center gap-2 rounded-3xl bg-white px-2 py-4 text-center shadow-card transition hover:-translate-y-0.5 hover:shadow-lg"
+                  className="pressable group flex flex-col items-center gap-2.5 rounded-[28px] bg-white px-2 pb-4 pt-5 text-center shadow-card ring-1 ring-black/[.03] transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-50 text-accent">
-                    <ServiceIcon name={s.icon} className="h-6 w-6" />
-                  </span>
-                  <span className="text-[13px] font-semibold leading-tight text-ink">{s.name_ar}</span>
+                  <ServiceBadge icon={s.icon} size={58} className="transition-transform duration-300 group-hover:scale-105" />
+                  <span className="text-[13px] font-bold leading-tight text-ink">{s.name_ar}</span>
                 </Link>
               ))}
             </div>

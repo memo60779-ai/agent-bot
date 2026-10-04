@@ -13,7 +13,7 @@ import {
 import { cn, errorMessage, formatDate, signedUrl, telLink, timeAgo, whatsappLink } from '../lib/utils';
 import { celebrate, celebrateOnce } from '../lib/confetti';
 import { StatusBadge } from '../components/cards';
-import { ServiceIcon } from '../components/ServiceIcon';
+import { ServiceBadge } from '../components/ServiceIcon';
 import {
   Avatar, Badge, Button, Card, DemoBadge, EmptyState, ErrorBox, Field, Input, LinkButton, PageHeader, RatingInline,
   Spinner, StarInput, Stars, Textarea, VerifiedBadge,
@@ -127,9 +127,7 @@ export default function RequestDetail() {
       {/* Summary */}
       <Card>
         <div className="flex items-start gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent-50 text-accent">
-            <ServiceIcon name={req.services?.icon ?? 'wrench'} className="h-6 w-6" />
-          </span>
+          <ServiceBadge icon={req.services?.icon ?? 'wrench'} size={48} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-bold text-ink">{req.services?.name_ar}</span>

@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { must, useLoad } from '../../lib/useLoad';
 import type { Provider, Service } from '../../lib/types';
 import { PROVINCE } from '../../lib/constants';
-import { ServiceIcon } from '../../components/ServiceIcon';
+import { ServiceBadge } from '../../components/ServiceIcon';
 import { ProviderCard } from '../../components/cards';
 import { EmptyState, ErrorBox, LinkButton, PageHeader, Spinner } from '../../components/ui';
 
@@ -34,9 +34,7 @@ export default function ServicePage() {
     <div>
       <PageHeader title={service.name_ar} back="/" />
       <div className="mb-5 flex items-center gap-4 rounded-3xl bg-white p-5 shadow-card">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent-50 text-accent">
-          <ServiceIcon name={service.icon} className="h-7 w-7" />
-        </span>
+        <ServiceBadge icon={service.icon} size={60} />
         <div className="flex-1">
           <p className="font-bold text-ink">{service.name_ar}</p>
           <p className="text-sm text-gray-500">{service.description_ar}</p>

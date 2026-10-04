@@ -7,7 +7,7 @@ import { must, useLoad } from '../../lib/useLoad';
 import type { Provider, Service, TimeSlot } from '../../lib/types';
 import { CITIES, CITY_NAMES, PROVINCE, TIME_SLOT_LABEL, UPCOMING_PROVINCES } from '../../lib/constants';
 import { errorMessage, uploadFile, cn } from '../../lib/utils';
-import { ServiceIcon } from '../../components/ServiceIcon';
+import { ServiceBadge } from '../../components/ServiceIcon';
 import {
   Avatar, Button, ChoiceChip, ErrorBox, Field, Input, PageHeader, Select, Spinner, Textarea,
 } from '../../components/ui';
@@ -173,9 +173,7 @@ export default function NewRequest() {
                   s.slug === serviceSlug ? 'border-primary ring-2 ring-primary/15' : 'border-gray-100',
                 )}
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-50 text-accent">
-                  <ServiceIcon name={s.icon} className="h-5 w-5" />
-                </span>
+                <ServiceBadge icon={s.icon} size={42} />
                 <span className="font-semibold text-ink">{s.name_ar}</span>
               </button>
             ))}
