@@ -1,26 +1,31 @@
+import markUrl from '../assets/fanni-mark.svg';
 import { cn } from '../lib/utils';
 
-// Mark: a roof (home services) over a wrench (the craft). Orange roof = brand accent.
-const WRENCH = 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z';
-
+/**
+ * Brand mark (designer's file: src/assets/fanni-mark.svg — white/orange petals, made for
+ * dark backgrounds). `flat` = draw it directly on an existing navy surface; otherwise it
+ * sits on its own navy tile so it works on light backgrounds too.
+ */
 export function LogoMark({ size = 40, className, flat }: { size?: number; className?: string; flat?: boolean }) {
+  if (flat) {
+    return <img src={markUrl} width={size} height={size} alt="" aria-hidden="true" className={className} />;
+  }
   return (
-    <svg viewBox="0 0 512 512" width={size} height={size} className={className} aria-hidden="true">
-      {!flat && <rect width="512" height="512" rx="120" fill="#203048" />}
-      <path d="M104 246 L256 114 L408 246" fill="none" stroke="#FF7700" strokeWidth="38"
-        strokeLinecap="round" strokeLinejoin="round" />
-      <g transform="translate(150 214) scale(9.2)">
-        <path d={WRENCH} fill="#fff" stroke="#fff" strokeWidth="1.2" strokeLinejoin="round" />
-      </g>
-    </svg>
+    <span
+      className={cn('inline-flex shrink-0 items-center justify-center bg-primary', className)}
+      style={{ width: size, height: size, borderRadius: size * 0.24 }}
+      aria-hidden="true"
+    >
+      <img src={markUrl} alt="" style={{ width: size * 0.8, height: size * 0.8 }} />
+    </span>
   );
 }
 
-/** Mark + Arabic wordmark. `light` = for dark backgrounds. */
+/** Mark + Arabic wordmark. `light` = on a dark (navy) background. */
 export function Logo({ size = 36, light, className }: { size?: number; light?: boolean; className?: string }) {
   return (
     <span className={cn('inline-flex items-center gap-2', className)} aria-label="فني">
-      <LogoMark size={size} />
+      <LogoMark size={size} flat={light} />
       <span
         className={cn('font-extrabold leading-none tracking-tight', light ? 'text-white' : 'text-primary')}
         style={{ fontSize: size * 0.82 }}
