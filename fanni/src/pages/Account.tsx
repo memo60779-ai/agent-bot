@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth';
 import { CITIES, CITY_NAMES } from '../lib/constants';
 import { errorMessage, isPhoneAccount, publicUrl, uploadFile } from '../lib/utils';
 import { Avatar, Badge, Button, Card, ErrorBox, Field, Input, PageHeader, Select } from '../components/ui';
+import { InstallButton } from '../components/InstallApp';
 
 const ROLE_LABEL = { customer: 'زبون', provider: 'فني', admin: 'مدير' } as const;
 
@@ -92,6 +93,8 @@ export default function Account() {
         {msg && <p className="text-sm font-semibold text-emerald-600">{msg}</p>}
         <Button full loading={busy} onClick={save}>حفظ</Button>
       </Card>
+
+      <InstallButton />
 
       <Button variant="danger" full onClick={async () => { await signOut(); nav('/'); }}>
         <LogOut className="h-5 w-5" /> تسجيل خروج
