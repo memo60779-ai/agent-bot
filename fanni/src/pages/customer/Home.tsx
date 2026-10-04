@@ -10,6 +10,7 @@ import { ServiceBadge } from '../../components/ServiceIcon';
 import { ProviderCard, RequestCard } from '../../components/cards';
 import { ErrorBox, Spinner } from '../../components/ui';
 import { Logo } from '../../components/Logo';
+import heroImg from '../../assets/hero-electrician.webp';
 
 export default function Home() {
   const { profile } = useAuth();
@@ -66,25 +67,31 @@ export default function Home() {
   return (
     <div className="space-y-6">
       {/* Hero */}
-      <section className="-mx-4 rounded-b-[2rem] bg-primary px-5 pb-6 pt-6 text-white">
-        <div className="flex items-center justify-between">
+      <section className="relative -mx-4 overflow-hidden rounded-b-[2rem] bg-primary px-5 pb-6 pt-6 text-white">
+        {/* photo (subject on the left, away from the RTL text) + navy wash for legibility */}
+        <img src={heroImg} alt="" aria-hidden="true" fetchPriority="high"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[94%_30%] opacity-90" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-primary from-25% via-primary/80 to-primary/30" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-primary/90 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-primary/75 to-transparent" />
+        <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-sm text-white/70">
             <MapPin className="h-4 w-4" /> {profile?.area ? `${profile.area}، ` : ''}{PROVINCE}
           </div>
           <Logo size={34} light />
         </div>
-        <h1 className="mt-5 animate-fade-up text-[26px] font-extrabold leading-snug">
+        <h1 className="relative mt-5 animate-fade-up text-[26px] font-extrabold leading-snug drop-shadow-sm">
           {firstName ? `هلا ${firstName}،` : 'هلا بيك،'}
           <br />
           شنو تحتاج اليوم؟
         </h1>
-        <div className="relative mt-4">
+        <div className="relative mt-5">
           <Search className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="دوّر على خدمة… مثلاً: تسريب، سبلت، غسالة"
-            className="w-full rounded-2xl bg-white py-4 pe-4 ps-12 text-base text-ink placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-accent/30"
+            className="w-full rounded-2xl bg-white py-4 pe-4 ps-12 text-base text-ink shadow-lg shadow-black/20 placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-accent/30"
           />
         </div>
       </section>
