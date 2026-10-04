@@ -10,6 +10,7 @@ import { ServiceBadge } from '../../components/ServiceIcon';
 import { ProviderCard, RequestCard } from '../../components/cards';
 import { ErrorBox, Spinner } from '../../components/ui';
 import { Logo } from '../../components/Logo';
+import { InstallBanner } from '../../components/InstallApp';
 import heroImg from '../../assets/hero-electrician.webp';
 
 export default function Home() {
@@ -95,6 +96,8 @@ export default function Home() {
           />
         </div>
       </section>
+
+      <InstallBanner />
 
       {/* Services */}
       <section>
