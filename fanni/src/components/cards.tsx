@@ -4,7 +4,7 @@ import type { Provider, ServiceRequest } from '../lib/types';
 import { STATUS_LABEL, STATUS_TONE } from '../lib/constants';
 import { timeAgo } from '../lib/utils';
 import { AvailableBadge, Avatar, Badge, DemoBadge, RatingInline, VerifiedBadge } from './ui';
-import { ServiceIcon } from './ServiceIcon';
+import { ServiceBadge } from './ServiceIcon';
 
 export function StatusBadge({ status }: { status: ServiceRequest['status'] }) {
   return <Badge tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</Badge>;
@@ -46,9 +46,7 @@ export function ProviderCard({ p, action }: { p: Provider; action?: React.ReactN
 export function RequestCard({ r, to }: { r: ServiceRequest; to: string }) {
   return (
     <Link to={to} className="flex items-center gap-3 rounded-3xl bg-white p-4 shadow-card">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent-50 text-accent">
-        <ServiceIcon name={r.services?.icon ?? 'wrench'} className="h-6 w-6" />
-      </div>
+      <ServiceBadge icon={r.services?.icon ?? 'wrench'} size={48} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="truncate font-bold text-ink">{r.services?.name_ar}</span>
