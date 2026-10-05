@@ -1,6 +1,6 @@
 import {
-  DoorClosed, Droplets, Hammer, PaintRoller, Snowflake, Sparkles, WashingMachine, Wrench, Zap,
-  type LucideIcon,
+  BrickWall, Cctv, DoorClosed, Droplets, GlassWater, Hammer, PaintRoller, Snowflake, SolarPanel, Sparkles,
+  WashingMachine, Wrench, Zap, type LucideIcon,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -13,6 +13,10 @@ const ICONS: Record<string, LucideIcon> = {
   'paint-roller': PaintRoller,
   'door-closed': DoorClosed,
   sparkles: Sparkles,
+  'solar-panel': SolarPanel,
+  cctv: Cctv,
+  'brick-wall': BrickWall,
+  'glass-water': GlassWater,
   wrench: Wrench,
 };
 export const ICON_NAMES = Object.keys(ICONS);
@@ -26,7 +30,8 @@ export function ServiceIcon({ name, className, strokeWidth }: { name: string; cl
 const PETAL = 'M382.51,315.6h174.32c44.44,0,77.2-41.97,65.92-84.95-27.67-105.48-100.24-189.99-192.87-226.03-44.35-17.25-92.12,16.05-92.12,63.64v202.59c0,24.72,20.04,44.75,44.75,44.75Z';
 
 // Fixed color per service so it is the same everywhere; in the 3-column grid this makes a checkerboard.
-const NAVY_SERVICES = new Set(['droplets', 'snowflake', 'hammer', 'door-closed']);
+// (alternates with sort order: 1 navy, 2 orange, …, 12 orange)
+const NAVY_SERVICES = new Set(['droplets', 'snowflake', 'hammer', 'door-closed', 'solar-panel', 'brick-wall']);
 
 export type BadgeTone = 'navy' | 'orange';
 export const toneForIcon = (icon: string): BadgeTone => (NAVY_SERVICES.has(icon) ? 'navy' : 'orange');
