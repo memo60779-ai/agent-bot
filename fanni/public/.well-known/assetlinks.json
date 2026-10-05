@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.faniy.twa",
+      "sha256_cert_fingerprints": [
+        "BF:03:C5:51:08:C0:6D:E9:A7:B3:7D:BC:60:70:C0:35:4C:5F:58:DD:79:87:41:10:47:E9:83:C0:C0:AF:3D:AA"
+      ]
+    }
+  }
+]
