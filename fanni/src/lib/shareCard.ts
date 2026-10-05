@@ -156,7 +156,7 @@ async function draw(info: CardInfo, withAvatar: boolean): Promise<HTMLCanvasElem
   const stats: [string, string][] = [
     info.ratingCount ? [`★ ${info.ratingAvg.toFixed(1)}`, `${info.ratingCount} تقييم`] : ['جديد', 'على فني'],
     [String(info.years), 'سنة خبرة'],
-    [String(info.jobs), 'شغلة مكتملة'],
+    info.jobs > 0 ? [String(info.jobs), 'شغلة مكتملة'] : ['✓', 'موثّق بالهوية'],
   ];
   const colW = 300;
   stats.forEach(([v, l], i) => {

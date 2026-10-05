@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, BadgeCheck, Loader2, Star, FlaskConical } from 'lucide-react';
+import { ArrowRight, Award, BadgeCheck, Loader2, Sparkles, Star, FlaskConical } from 'lucide-react';
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import { cn, initials } from '../lib/utils';
 
@@ -75,7 +75,7 @@ export type Tone = keyof typeof TONES;
 
 export function Badge({ tone = 'gray', children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
   return (
-    <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold', TONES[tone], className)}>
+    <span className={cn('inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold', TONES[tone], className)}>
       {children}
     </span>
   );
@@ -87,6 +87,24 @@ export function VerifiedBadge() {
       <BadgeCheck className="h-3.5 w-3.5" /> موثق
     </Badge>
   );
+}
+
+/** First 50 providers to join (share codes 101–150): a real, permanent distinction. */
+export const FOUNDER_MAX_CODE = 150;
+export function FounderBadge({ code }: { code?: number | null }) {
+  if (code == null || code > FOUNDER_MAX_CODE) return null;
+  return (
+    <Badge tone="orange">
+      <Award className="h-3.5 w-3.5" /> من أوائل فنيي فني
+    </Badge>
+  );
+}
+
+/** Jobs when there are some; otherwise years of experience (never a bare "0"). */
+export function JobsOrYears({ jobs, years }: { jobs: number; years: number }) {
+  if (jobs > 0) return <span>{jobs} شغلة</span>;
+  if (years > 0) return <span>{years} سنين خبرة</span>;
+  return null;
 }
 
 export function AvailableBadge({ available }: { available: boolean }) {
@@ -146,7 +164,13 @@ export function StarInput({ value, onChange, size = 36 }: { value: number; onCha
 }
 
 export function RatingInline({ avg, count }: { avg: number; count: number }) {
-  if (!count) return <span className="text-xs text-gray-500">جديد</span>;
+  if (!count) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-accent-50 px-2 py-0.5 text-xs font-bold text-accent-600">
+        <Sparkles className="h-3 w-3" /> جديد على فني
+      </span>
+    );
+  }
   return (
     <span className="inline-flex items-center gap-1 text-sm font-semibold text-ink">
       <Star className="h-4 w-4 fill-accent text-accent" />

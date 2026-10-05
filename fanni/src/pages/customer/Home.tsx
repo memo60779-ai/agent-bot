@@ -35,6 +35,13 @@ export default function Home() {
     ) as ServiceRequest[];
   }, [profile?.id]);
 
+  // Real social proof: how many verified providers serve Karbala (demo rows excluded)
+  const verifiedCount = useLoad(async () => {
+    const { count } = await supabase.from('providers').select('id', { count: 'exact', head: true })
+      .eq('verification_status', 'verified').eq('province', PROVINCE).eq('is_demo', false);
+    return count ?? 0;
+  });
+
   // "Nearby": available + verified, same area first, then same city, then rating
   const nearby = useLoad(async () => {
     const rows = must(
@@ -148,8 +155,12 @@ export default function Home() {
       <section className="flex items-center gap-3 rounded-3xl bg-white p-4 shadow-card">
         <ShieldCheck className="h-10 w-10 shrink-0 text-primary" />
         <div className="text-sm">
-          <p className="font-bold text-ink">فنيين موثقين بس</p>
-          <p className="text-gray-500">نراجع هوية كل فني قبل ما يستلم طلبات، والتقييمات من زبائن خلصوا شغلهم فعلاً.</p>
+          <p className="font-bold text-ink">
+            {verifiedCount.data && verifiedCount.data >= 5
+              ? `${verifiedCount.data} فني موثّق بكربلاء`
+              : 'فنيين موثقين بس'}
+          </p>
+          <p className="text-gray-500">نقابل كل فني ونتأكد من هويته بنفسنا قبل ما يستلم طلبات، والتقييمات بس من زبائن خلصوا شغلهم فعلاً.</p>
         </div>
       </section>
 
