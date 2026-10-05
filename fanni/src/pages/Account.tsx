@@ -7,6 +7,7 @@ import { CITIES, CITY_NAMES } from '../lib/constants';
 import { errorMessage, isPhoneAccount, publicUrl, uploadFile } from '../lib/utils';
 import { Avatar, Badge, Button, Card, ErrorBox, Field, Input, PageHeader, Select } from '../components/ui';
 import { InstallButton } from '../components/InstallApp';
+import { PushCard } from '../components/PushCard';
 
 const ROLE_LABEL = { customer: 'زبون', provider: 'فني', admin: 'مدير' } as const;
 
@@ -94,6 +95,7 @@ export default function Account() {
         <Button full loading={busy} onClick={save}>حفظ</Button>
       </Card>
 
+      <PushCard audience={profile?.role === 'provider' ? 'provider' : profile?.role === 'admin' ? 'admin' : 'customer'} settings />
       <InstallButton />
 
       <Button variant="danger" full onClick={async () => { await signOut(); nav('/'); }}>

@@ -38,5 +38,16 @@ for (const [src, out, size] of [
   await page.setContent(`<html><body style="margin:0;background:transparent">${svg}</body></html>`);
   await page.screenshot({ path: `public/icons/${out}`, omitBackground: true, clip: { x: 0, y: 0, width: size, height: size } });
 }
+// Android notification badge: white silhouette on transparent (the OS tints it).
+{
+  const size = 96;
+  const body = simple.body
+    .replace(/fill:\s*#(fff|f70)\b/gi, 'fill: #fff')
+    .replace(/fill:\s*#203048/gi, 'fill: none');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="${simple.vb}">${body}</svg>`;
+  await page.setViewportSize({ width: size, height: size });
+  await page.setContent(`<html><body style="margin:0;background:transparent">${svg}</body></html>`);
+  await page.screenshot({ path: 'public/icons/badge-96.png', omitBackground: true, clip: { x: 0, y: 0, width: size, height: size } });
+}
 await browser.close();
 console.log('icons rendered');

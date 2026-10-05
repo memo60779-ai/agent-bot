@@ -107,6 +107,14 @@ select fanni_test.check((select lat = 32.62 and lng = 44.02 from public.service_
 select fanni_test.check_fails('select * from public.request_locations', 'customer cannot read request_locations directly');
 select fanni_test.check((select lat = 32.6161234 from public.get_request_contacts((select v from t_ids where k = 'req'))),
                      'customer sees own exact location');
+-- push notifications
+select public.push_subscribe('https://fcm.googleapis.com/fcm/send/test-cust', repeat('a', 87), repeat('b', 22), 'test');
+select fanni_test.check(public.push_status(), 'customer can register a push endpoint');
+select fanni_test.check_fails($q$select public.push_subscribe('http://evil.local/x', repeat('a', 87), repeat('b', 22))$q$,
+                     'push endpoint must be https');
+select fanni_test.check_fails('select * from public.push_subscriptions', 'customer cannot read push_subscriptions');
+select fanni_test.check_fails('select public.push_service_config()', 'customer cannot read push keys/secret');
+select fanni_test.check_fails($q$select public.push_service_init('x', 'y')$q$, 'customer cannot set push keys');
 select fanni_test.check((select count(*) from public.match_providers((select v from t_ids where k = 'req'))) = 4,
                      'matching returns 4 verified plumbers');
 select fanni_test.check((select provider_id from public.match_providers((select v from t_ids where k = 'req')) limit 1) = :provider,
@@ -137,6 +145,8 @@ select fanni_test.check((select count(*) from public.service_requests where id =
 select fanni_test.check((select bool_and(provider_id = :provider) from public.provider_requests),
                      'provider sees only own offers');
 select fanni_test.check((select count(*) from public.users) = 1, 'provider cannot read customer profiles');
+select public.push_unsubscribe('https://fcm.googleapis.com/fcm/send/test-cust');  -- not theirs: no-op
+select fanni_test.check(not public.push_status(), 'provider has no push endpoint of the customer');
 select fanni_test.check((select lat is null from public.get_request_contacts((select v from t_ids where k = 'req'))),
                      'exact location hidden from offered provider before accepting');
 select fanni_test.check_fails('select * from public.request_locations', 'provider cannot read request_locations directly');
@@ -179,6 +189,7 @@ select fanni_test.check_fails(format($q$select public.update_request_status(%L, 
 
 -- customer cannot cancel IN_PROGRESS
 select fanni_test.login(:customer);
+select fanni_test.check(public.push_status(), 'provider could not remove the customer push endpoint');
 select fanni_test.check_fails(format($q$select public.update_request_status(%L, 'CANCELLED')$q$, (select v from t_ids where k = 'req')),
                      'customer cannot cancel in-progress job');
 select fanni_test.check((select provider_phone from public.get_request_contacts((select v from t_ids where k = 'req'))) = '07700000003',

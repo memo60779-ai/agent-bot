@@ -15,6 +15,7 @@ import { celebrate, celebrateOnce } from '../lib/confetti';
 import { StatusBadge } from '../components/cards';
 import { ServiceBadge } from '../components/ServiceIcon';
 import { LocationCard } from '../components/LocationMap';
+import { PushCard } from '../components/PushCard';
 import {
   Avatar, Badge, Button, Card, DemoBadge, EmptyState, ErrorBox, Field, Input, LinkButton, PageHeader, RatingInline,
   Spinner, StarInput, Stars, Textarea, VerifiedBadge,
@@ -119,6 +120,9 @@ export default function RequestDetail() {
           </div>
         </div>
       )}
+
+      {/* Customer: get told when a provider accepts / is on the way */}
+      {isCustomer && ['NEW', 'MATCHING', 'ACCEPTED', 'ON_THE_WAY'].includes(req.status) && <PushCard audience="customer" />}
 
       {/* Customer: choose providers first — it's the main action while matching */}
       {isCustomer && ['NEW', 'MATCHING'].includes(req.status) && (
