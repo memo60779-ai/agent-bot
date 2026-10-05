@@ -260,6 +260,49 @@ select fanni_test.check((select count(*) from public.providers where id = :other
                      'deactivated provider disappears from public list');
 select fanni_test.check((select count(*) from public.reviews where is_hidden) = 0, 'anon cannot see hidden reviews');
 
+-- ---------------------------------------------------------------- forgot password
+select fanni_test.logout();
+select set_config('role', 'anon', true);
+select public.request_password_reset('07700000002', 'نسيت الرمز');
+select public.request_password_reset('٠٧٧٠٠٠٠٠٠٠٢');            -- same number within the hour: ignored
+select public.request_password_reset('07799999999');             -- unknown number: no error, no hint
+select fanni_test.check_fails($q$select public.request_password_reset('123')$q$, 'reset needs a valid phone');
+select fanni_test.check_fails('select * from public.password_reset_requests', 'anon cannot read reset requests');
+select fanni_test.login(:customer);
+select fanni_test.check_fails('select * from public.admin_password_resets()', 'customer cannot list reset requests');
+select fanni_test.check_fails($q$select public.admin_resolve_password_reset(gen_random_uuid(), 'x123456')$q$,
+                     'customer cannot resolve reset requests');
+select fanni_test.login(:admin);
+select fanni_test.check((select count(*) from public.admin_password_resets()) = 1,
+                     'admin sees one request (rate limited; unknown numbers not listed)');
+select public.admin_resolve_password_reset((select id from public.admin_password_resets() limit 1), 'NewPass123');
+select fanni_test.check((select count(*) from public.admin_password_resets()) = 0, 'resolved request leaves the queue');
+select fanni_test.logout();
+select fanni_test.check((select encrypted_password = crypt('NewPass123', encrypted_password) from auth.users where id = :customer),
+                     'admin set the new password');
+
+-- ---------------------------------------------------------------- account deletion
+select set_config('role', 'anon', true);
+select public.phone_signup('07712340000', 'Delete@123', 'حساب للحذف', 'customer');
+select fanni_test.logout();
+select id as del_uid from public.users where phone = '07712340000' \gset
+insert into public.service_requests (customer_id, service_id, problem_type, description, city, area, status, provider_id)
+select :'del_uid', id, 'تسريب مي', 'حذف', 'كربلاء', 'حي الحسين', 'ACCEPTED', :provider from public.services where slug = 'plumbing';
+select fanni_test.login(:'del_uid');
+select fanni_test.check_fails('select public.delete_my_account()', 'cannot delete account with a job under way');
+select fanni_test.logout();
+update public.service_requests set status = 'CANCELLED' where customer_id = :'del_uid';
+select fanni_test.login(:'del_uid');
+select public.delete_my_account();
+select fanni_test.logout();
+select fanni_test.check((select count(*) from auth.users where id = :'del_uid') = 0
+                        and (select count(*) from public.users where id = :'del_uid') = 0
+                        and (select count(*) from public.service_requests where customer_id = :'del_uid') = 0,
+                     'account and its data deleted');
+select fanni_test.login(:admin);
+select fanni_test.check_fails('select public.delete_my_account()', 'admin cannot delete own account');
+select fanni_test.logout();
+
 -- ---------------------------------------------------------------- storage policies
 select fanni_test.logout();
 insert into storage.objects (bucket_id, name) values

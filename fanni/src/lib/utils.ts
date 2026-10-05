@@ -12,6 +12,8 @@ const ERRORS: Record<string, string> = {
   request_already_taken: 'فني ثاني سبقك وقبل الطلب',
   invalid_transition: 'ما تگدر تغيّر الحالة بهالشكل',
   invalid_eta: 'اختار وقت وصول بين 5 دقايق و3 ساعات',
+  active_requests: 'عندك شغل شغّال هسه. خلّصه أو ألغيه أول، وبعدين احذف الحساب',
+  admin_cannot_delete_self: 'حساب الإدارة ما ينحذف من هنا',
   cannot_cancel_in_progress: 'الشغل بدأ، ما تگدر تلغي هسه. تواصل ويا الفني',
   request_not_completed: 'التقييم يصير بس بعد ما يكتمل الطلب',
   already_reviewed: 'قيّمت هذا الطلب من قبل',

@@ -108,7 +108,7 @@ Every demo row has `is_demo = true` (users, providers, portfolio, verifications,
 ## 5. Tests
 
 ```bash
-# Database security & business rules (83 checks) — run against a freshly seeded DB
+# Database security & business rules (93 checks) — run against a freshly seeded DB
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/security_test.sql
 
 # Full end-to-end flow in a phone-sized browser (needs the app running against a seeded project)

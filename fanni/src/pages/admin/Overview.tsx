@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import {
-  AlertTriangle, BadgeCheck, CheckCircle2, ClipboardList, Clock, FlaskConical, Star, Users, Wrench, XCircle,
+  AlertTriangle, BadgeCheck, CheckCircle2, ClipboardList, Clock, FlaskConical, KeyRound, Star, Users, Wrench, XCircle,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { supabase } from '../../lib/supabase';
@@ -32,9 +32,12 @@ function Tile({ label, value, icon, to, tone = 'text-primary' }: {
 
 export default function Overview() {
   const { data, loading, error, reload } = useLoad(async () => {
-    const { data, error } = await supabase.rpc('admin_stats');
+    const [{ data, error }, resets] = await Promise.all([
+      supabase.rpc('admin_stats'),
+      supabase.rpc('admin_password_resets'),
+    ]);
     if (error) throw error;
-    return data as Stats;
+    return { ...(data as Stats), password_resets: ((resets.data as unknown[] | null) ?? []).length };
   });
 
   if (loading) return <Spinner />;
@@ -51,6 +54,11 @@ export default function Overview() {
         </Link>
       )}
       <PushCard audience="admin" />
+      {s.password_resets > 0 && (
+        <Link to="/admin/users" className="flex items-center gap-3 rounded-3xl bg-accent-50 p-4 font-semibold text-accent-600">
+          <KeyRound className="h-6 w-6" /> {s.password_resets} طلب استعادة رمز بانتظارك
+        </Link>
+      )}
       <TelegramCard
         title="إشعارات الإدارة"
         text="تجيك رسالة على تليكرام أول ما يقدّم فني على التوثيق، حتى توافق بدقيقة."

@@ -260,6 +260,13 @@ export default function RequestDetail() {
         </Card>
       )}
 
+      {/* Customer: happy? book the same provider again in one tap */}
+      {isCustomer && ['COMPLETED', 'RATED'].includes(req.status) && req.provider_id && req.services?.slug && (
+        <LinkButton to={`/request/new?service=${req.services.slug}&provider=${req.provider_id}`} variant="outline" full>
+          <RefreshCw className="h-4 w-4" /> اطلب {req.providers?.display_name?.split(' ')[0] ?? 'نفس الفني'} مرة ثانية
+        </LinkButton>
+      )}
+
       {/* Customer: complaints */}
       {isCustomer && ['COMPLETED', 'RATED'].includes(req.status) && (
         <ComplaintBox req={req} complaints={complaints} onDone={reload} />

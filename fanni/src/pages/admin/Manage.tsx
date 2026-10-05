@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search } from 'lucide-react';
+import { KeyRound, MessageCircle, Plus, Search } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/auth';
 import { must, useLoad } from '../../lib/useLoad';
@@ -8,7 +8,7 @@ import type {
   Complaint, ComplaintStatus, Profile, Provider, RequestStatus, Review, Service, ServiceRequest, UserRole,
 } from '../../lib/types';
 import { COMPLAINT_LABEL, STATUS_LABEL, VERIFICATION_LABEL } from '../../lib/constants';
-import { cn, errorMessage, formatDate, isPhoneAccount, timeAgo } from '../../lib/utils';
+import { cn, errorMessage, formatDate, isPhoneAccount, timeAgo, whatsappLink } from '../../lib/utils';
 import { StatusBadge } from '../../components/cards';
 import { ICON_NAMES, ServiceBadge } from '../../components/ServiceIcon';
 import {
@@ -42,6 +42,81 @@ function Pills<T extends string>({ options, value, onChange, label }: {
 // =====================================================================
 // Users
 // =====================================================================
+interface ResetRow { id: string; phone: string; user_id: string; full_name: string; role: UserRole; note: string | null; created_at: string }
+
+// readable temporary password: no 0/O/1/l confusion when typed from WhatsApp
+function tempPassword() {
+  const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  return Array.from(bytes, (b) => chars[b % chars.length]).join('');
+}
+const wa = (phone: string, text: string) => `${whatsappLink(phone)}?text=${encodeURIComponent(text)}`;
+
+/** "نسيت الرمز" queue: confirm on WhatsApp (same number), then set a new password. */
+function PasswordResets() {
+  const list = useLoad(async () => {
+    const { data, error } = await supabase.rpc('admin_password_resets');
+    if (error) throw error;
+    return data as ResetRow[];
+  });
+  const [given, setGiven] = useState<{ name: string; phone: string; pw: string } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function resolve(r: ResetRow, setNew: boolean) {
+    const pw = setNew ? tempPassword() : null;
+    if (setNew && !confirm(`تأكدت من ${r.full_name} بالواتساب؟ راح نعيّن إله رمز جديد.`)) return;
+    setErr(null);
+    const { error } = await supabase.rpc('admin_resolve_password_reset', { p_id: r.id, p_password: pw });
+    if (error) return setErr(errorMessage(error));
+    if (pw) setGiven({ name: r.full_name, phone: r.phone, pw });
+    list.reload();
+  }
+
+  if (list.loading || (!list.data?.length && !given)) return null;
+  return (
+    <Card className="space-y-3 ring-1 ring-accent/30">
+      <p className="flex items-center gap-2 font-bold text-ink"><KeyRound className="h-5 w-5 text-accent" /> طلبات استعادة الرمز</p>
+      <ErrorBox message={err ?? list.error} />
+      {given && (
+        <div className="space-y-2 rounded-2xl bg-emerald-50 p-3 text-sm text-emerald-900">
+          <p>الرمز الجديد لـ {given.name}: <b dir="ltr" className="font-mono text-base">{given.pw}</b></p>
+          <a
+            className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-600 font-bold text-white"
+            target="_blank" rel="noreferrer"
+            href={wa(given.phone, `هلا ${given.name.split(' ')[0]} 👋\nرمزك الجديد بتطبيق «فني»: ${given.pw}\nسجّل دخول بيه، وغيّره من صفحة «حسابي».\nفريق فني ما يطلب منك الرمز أبد.`)}
+          >
+            <MessageCircle className="h-5 w-5" /> دز الرمز بالواتساب
+          </a>
+          <button className="w-full text-xs text-emerald-700" onClick={() => setGiven(null)}>تم، أخفيه</button>
+        </div>
+      )}
+      {(list.data ?? []).map((r) => (
+        <div key={r.id} className="space-y-2 rounded-2xl bg-surface p-3">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="font-bold text-ink">{r.full_name} <span className="text-xs font-normal text-gray-500">· {r.role === 'provider' ? 'فني' : 'زبون'}</span></p>
+              <p className="text-sm text-gray-500" dir="ltr">{r.phone}</p>
+            </div>
+            <span className="text-xs text-gray-400">{timeAgo(r.created_at)}</span>
+          </div>
+          {r.note && <p className="text-sm text-gray-600">💬 {r.note}</p>}
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              className="flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-emerald-50 text-sm font-bold text-emerald-700"
+              target="_blank" rel="noreferrer"
+              href={wa(r.phone, `هلا ${r.full_name.split(' ')[0]}، هذا فريق «فني» 👋\nوصلنا طلب استعادة الرمز من رقمك. إنت طلبته؟`)}
+            >
+              <MessageCircle className="h-4 w-4" /> ١. تأكد بالواتساب
+            </a>
+            <Button size="sm" onClick={() => resolve(r, true)}>٢. عيّن رمز جديد</Button>
+          </div>
+          <button className="w-full text-xs text-gray-400" onClick={() => resolve(r, false)}>تجاهل الطلب</button>
+        </div>
+      ))}
+    </Card>
+  );
+}
+
 export function AdminUsers() {
   const { profile: me } = useAuth();
   const [q, setQ] = useState('');
@@ -74,6 +149,7 @@ export function AdminUsers() {
 
   return (
     <div className="space-y-3">
+      <PasswordResets />
       <SearchBox value={q} onChange={setQ} placeholder="اسم، إيميل أو رقم" />
       <Pills options={['all', 'customer', 'provider', 'admin'] as const} value={role} onChange={setRole}
         label={(r) => ({ all: 'الكل', customer: 'زبائن', provider: 'فنيين', admin: 'إدارة' })[r]} />

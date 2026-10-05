@@ -9,12 +9,17 @@ import NewRequest from './pages/customer/NewRequest';
 import MyRequests from './pages/customer/MyRequests';
 import RequestDetail from './pages/RequestDetail';
 import Account from './pages/Account';
-import { Login, Register } from './pages/Auth';
+import { ForgotPassword, Login, Register } from './pages/Auth';
 import Onboarding from './pages/provider/Onboarding';
 import ProviderDashboard from './pages/provider/Dashboard';
 import ProfileEdit from './pages/provider/ProfileEdit';
 import { Spinner } from './components/ui';
 import { Logo } from './components/Logo';
+
+// Text-only pages, rarely opened.
+const PrivacyPolicy = lazy(() => import('./pages/Legal').then((m) => ({ default: m.PrivacyPolicy })));
+const TermsOfService = lazy(() => import('./pages/Legal').then((m) => ({ default: m.TermsOfService })));
+const DeleteAccountInfo = lazy(() => import('./pages/Legal').then((m) => ({ default: m.DeleteAccountInfo })));
 
 // Pulls in the QR/canvas code only when a provider opens it.
 const ShareCard = lazy(() => import('./pages/provider/ShareCard'));
@@ -47,6 +52,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot" element={<ForgotPassword />} />
       {/* short link printed on the provider flyer / QR */}
       <Route path="/join" element={<Navigate to="/register?role=provider" replace />} />
 
@@ -56,6 +62,9 @@ export default function App() {
         <Route path="services/:slug" element={<ServicePage />} />
         <Route path="providers/:id" element={<ProviderProfile />} />
         <Route path="p/:code" element={<ProviderByCode />} />
+        <Route path="privacy" element={<Suspense fallback={<Spinner />}><PrivacyPolicy /></Suspense>} />
+        <Route path="terms" element={<Suspense fallback={<Spinner />}><TermsOfService /></Suspense>} />
+        <Route path="delete-account" element={<Suspense fallback={<Spinner />}><DeleteAccountInfo /></Suspense>} />
 
         {/* any signed-in user */}
         <Route path="request/new" element={<RequireAuth><NewRequest /></RequireAuth>} />

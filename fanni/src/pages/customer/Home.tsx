@@ -174,6 +174,11 @@ export default function Home() {
           إنت فني؟ سجّل وخلّي الزبائن يوصلولك 👷
         </Link>
       )}
+
+      <p className="flex justify-center gap-4 pt-2 text-xs text-gray-400">
+        <Link to="/privacy">سياسة الخصوصية</Link>
+        <Link to="/terms">شروط الاستخدام</Link>
+      </p>
     </div>
   );
 }
