@@ -130,6 +130,9 @@ export default function RequestDetail() {
       {/* Customer: get told when a provider accepts / is on the way */}
       {isCustomer && ['NEW', 'MATCHING', 'ACCEPTED', 'ON_THE_WAY'].includes(req.status) && <PushCard audience="customer" />}
 
+      {/* Customer waiting > 10 min: the admins were alerted; tell the customer a human is on it */}
+      {isCustomer && ['NEW', 'MATCHING'].includes(req.status) && <WaitingReassurance createdAt={req.created_at} offers={offers.length} />}
+
       {/* Customer: choose providers first — it's the main action while matching */}
       {isCustomer && ['NEW', 'MATCHING'].includes(req.status) && (
         <Matching req={req} onChange={reload} />
@@ -628,5 +631,28 @@ function CancelBox({ busy, onCancel }: { busy: boolean; onCancel: (reason: strin
         <Button variant="outline" onClick={() => setOpen(false)}>رجوع</Button>
       </div>
     </Card>
+  );
+}
+
+function WaitingReassurance({ createdAt, offers }: { createdAt: string; offers: number }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(t);
+  }, []);
+  const waited = Math.floor((now - new Date(createdAt).getTime()) / 60_000);
+  if (waited < 10) return null;
+  return (
+    <div className="flex animate-fade-up items-start gap-3 rounded-3xl bg-primary-50 p-4 text-primary">
+      <Users className="mt-0.5 h-6 w-6 shrink-0" />
+      <div>
+        <p className="font-bold">طلبك مو منسي 🤝</p>
+        <p className="text-sm leading-6">
+          {offers === 0
+            ? 'بعدك ما دزيت الطلب لأي فني. اختار فني من القائمة تحت، أو ننتظرك ونساعدك إحنا.'
+            : 'فريق فني وصله تنبيه بطلبك، ودنتواصل ويا الفنيين هسه. إذا احتجنا شي نتصل بيك.'}
+        </p>
+      </div>
+    </div>
   );
 }
