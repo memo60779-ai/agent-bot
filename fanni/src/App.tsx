@@ -47,6 +47,8 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      {/* short link printed on the provider flyer / QR */}
+      <Route path="/join" element={<Navigate to="/register?role=provider" replace />} />
 
       <Route element={<AppShell />}>
         {/* public */}
