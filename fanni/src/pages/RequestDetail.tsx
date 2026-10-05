@@ -496,8 +496,8 @@ function Matching({ req, onChange }: { req: ServiceRequest; onChange: () => void
       ) : (
         <EmptyState
           icon={<Users className="h-10 w-10" />}
-          title="ماكو فنيين متاحين لهالخدمة حالياً"
-          text="طلبك محفوظ. جرّب بعد شوية، أو غيّر الخدمة."
+          title="دنلگيلك فني 🤝"
+          text="ماكو فني متاح بالتطبيق هسه لهالخدمة، بس طلبك وصل لفريق فني وراح نتواصل وياك."
         />
       )}
     </div>

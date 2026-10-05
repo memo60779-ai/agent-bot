@@ -69,8 +69,8 @@ export default function ServicePage() {
       ) : (
         <EmptyState
           icon={<Users className="h-10 w-10" />}
-          title="ماكو فنيين موثقين بهالخدمة بعد"
-          text="أرسل طلبك وراح نبلغك أول ما يتوفر فني."
+          title="فنيين هالخدمة دنضيفهم هسه"
+          text="اطلب عادي، وفريق فني يدورلك فني موثّق ويتواصل وياك."
         />
       )}
     </div>

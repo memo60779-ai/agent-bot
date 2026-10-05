@@ -55,7 +55,7 @@ grant execute on all functions in schema fanni_test to authenticated, anon;
 
 -- ---------------------------------------------------------------- anon
 select set_config('role', 'anon', true);
-select fanni_test.check((select count(*) from public.services) = 8, 'anon sees 8 services');
+select fanni_test.check((select count(*) from public.services) = 12, 'anon sees 12 services');
 select fanni_test.check((select count(*) from public.providers where verification_status <> 'verified') = 0,
                      'anon sees only verified providers');
 select fanni_test.check((select count(*) from public.providers) = 17, 'anon sees 17 verified providers');
