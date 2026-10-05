@@ -96,11 +96,17 @@ select fanni_test.check((select count(*) from public.service_requests where cust
 create temp table t_ids (k text primary key, v uuid);
 grant all on t_ids to authenticated;
 with x as (
-  insert into public.service_requests (customer_id, service_id, problem_type, description, city, area, time_slot)
-  select auth.uid(), id, 'تسريب مي', 'اختبار', 'كربلاء', 'حي الحسين', 'now' from public.services where slug = 'plumbing'
+  insert into public.service_requests (customer_id, service_id, problem_type, description, city, area, time_slot, lat, lng)
+  select auth.uid(), id, 'تسريب مي', 'اختبار', 'كربلاء', 'حي الحسين', 'now', 32.6161234, 44.0249876
+  from public.services where slug = 'plumbing'
   returning id
 )
 insert into t_ids select 'req', id from x;
+select fanni_test.check((select lat = 32.62 and lng = 44.02 from public.service_requests where id = (select v from t_ids where k = 'req')),
+                     'request keeps only a rounded location');
+select fanni_test.check_fails('select * from public.request_locations', 'customer cannot read request_locations directly');
+select fanni_test.check((select lat = 32.6161234 from public.get_request_contacts((select v from t_ids where k = 'req'))),
+                     'customer sees own exact location');
 select fanni_test.check((select count(*) from public.match_providers((select v from t_ids where k = 'req'))) = 4,
                      'matching returns 4 verified plumbers');
 select fanni_test.check((select provider_id from public.match_providers((select v from t_ids where k = 'req')) limit 1) = :provider,
@@ -131,6 +137,9 @@ select fanni_test.check((select count(*) from public.service_requests where id =
 select fanni_test.check((select bool_and(provider_id = :provider) from public.provider_requests),
                      'provider sees only own offers');
 select fanni_test.check((select count(*) from public.users) = 1, 'provider cannot read customer profiles');
+select fanni_test.check((select lat is null from public.get_request_contacts((select v from t_ids where k = 'req'))),
+                     'exact location hidden from offered provider before accepting');
+select fanni_test.check_fails('select * from public.request_locations', 'provider cannot read request_locations directly');
 
 -- cannot self-verify / fake ratings
 update public.providers set verification_status = 'verified', rating_avg = 5, completed_jobs = 999 where id = :provider;
@@ -149,6 +158,8 @@ select fanni_test.check((select status from public.service_requests where id = (
                      'provider accepts -> ACCEPTED');
 select fanni_test.check((select customer_phone from public.get_request_contacts((select v from t_ids where k = 'req'))) = '07700000002',
                      'provider sees customer phone after accepting');
+select fanni_test.check((select lat = 32.6161234 and lng = 44.0249876 from public.get_request_contacts((select v from t_ids where k = 'req'))),
+                     'provider sees exact location after accepting');
 select fanni_test.check_fails(format($q$select public.update_request_status(%L, 'COMPLETED')$q$, (select v from t_ids where k = 'req')),
                      'provider cannot skip to COMPLETED');
 select public.update_request_status((select v from t_ids where k = 'req'), 'ON_THE_WAY');

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Camera, Check, Crosshair, ImagePlus, Lock, X } from 'lucide-react';
+import { Camera, ImagePlus, Lock, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/auth';
 import { must, useLoad } from '../../lib/useLoad';
@@ -8,6 +8,7 @@ import type { Provider, Service, TimeSlot } from '../../lib/types';
 import { CITIES, CITY_NAMES, PROVINCE, TIME_SLOT_LABEL, UPCOMING_PROVINCES } from '../../lib/constants';
 import { errorMessage, uploadFile, cn } from '../../lib/utils';
 import { ServiceBadge } from '../../components/ServiceIcon';
+import { LocationPicker } from '../../components/LocationMap';
 import {
   Avatar, Button, ChoiceChip, ErrorBox, Field, Input, PageHeader, Select, Spinner, Textarea,
 } from '../../components/ui';
@@ -37,7 +38,6 @@ export default function NewRequest() {
   const [area, setArea] = useState(profile?.area ?? '');
   const [address, setAddress] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [locating, setLocating] = useState(false);
   const [slot, setSlot] = useState<TimeSlot>('today');
   const [scheduledAt, setScheduledAt] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -66,19 +66,6 @@ export default function NewRequest() {
     slot !== 'scheduled' || !!scheduledAt,
     true,
   ][step];
-
-  function locate() {
-    if (!navigator.geolocation) return;
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setLocating(false);
-      },
-      () => setLocating(false),
-      { enableHighAccuracy: false, timeout: 10000 },
-    );
-  }
 
   async function submit() {
     if (!profile || !service) return;
@@ -258,12 +245,13 @@ export default function NewRequest() {
               {CITIES[city]?.map((a) => <option key={a}>{a}</option>)}
             </Select>
           </Field>
+          <LocationPicker value={coords} onChange={setCoords} />
           <Field label="أقرب نقطة دالة (اختياري)" hint="مثلاً: قرب جامع… / مقابل مدرسة…">
             <Input value={address} onChange={(e) => setAddress(e.target.value)} maxLength={200} />
           </Field>
-          <Button variant="outline" size="md" full onClick={locate} loading={locating} type="button">
-            {coords ? <><Check className="h-4 w-4 text-emerald-600" /> تم تحديد موقعك</> : <><Crosshair className="h-4 w-4" /> استخدم موقعي الحالي (اختياري)</>}
-          </Button>
+          <p className="flex items-center gap-1 text-xs text-gray-500">
+            <Lock className="h-3 w-3" /> موقعك الدقيق يظهر بس للفني اللي يقبل طلبك
+          </p>
         </section>
       )}
 
@@ -299,6 +287,7 @@ export default function NewRequest() {
               ['المشكلة', problem],
               ['الوصف', description],
               ['المكان', `${area}، ${city}${address ? ` — ${address}` : ''}`],
+              ['الخريطة', coords ? '📍 محدد' : 'غير محدد'],
               ['الوقت', slot === 'scheduled' ? new Date(scheduledAt).toLocaleString('ar-IQ') : TIME_SLOT_LABEL[slot]],
               ['صورة', photo ? 'مرفقة' : 'بدون'],
             ].map(([k, v]) => (

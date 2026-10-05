@@ -14,6 +14,7 @@ import { cn, errorMessage, formatDate, signedUrl, telLink, timeAgo, whatsappLink
 import { celebrate, celebrateOnce } from '../lib/confetti';
 import { StatusBadge } from '../components/cards';
 import { ServiceBadge } from '../components/ServiceIcon';
+import { LocationCard } from '../components/LocationMap';
 import {
   Avatar, Badge, Button, Card, DemoBadge, EmptyState, ErrorBox, Field, Input, LinkButton, PageHeader, RatingInline,
   Spinner, StarInput, Stars, Textarea, VerifiedBadge,
@@ -148,6 +149,11 @@ export default function RequestDetail() {
           {contacts?.address_details && (
             <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-accent" /> {contacts.address_details}</div>
           )}
+          {req.lat != null && contacts?.lat == null && isProviderView && (
+            <div className="flex items-center gap-2 font-semibold text-accent-600">
+              <MapPin className="h-4 w-4" /> الزبون حدد بيته على الخريطة، يظهرلك بعد ما تقبل
+            </div>
+          )}
         </div>
         {photoUrl ? (
           <a href={photoUrl} target="_blank" rel="noreferrer" className="mt-3 block">
@@ -157,6 +163,15 @@ export default function RequestDetail() {
           <div className="mt-3 flex items-center gap-2 text-sm text-gray-400"><ImageIcon className="h-4 w-4" /> الصورة غير متاحة</div>
         ) : null}
       </Card>
+
+      {/* Exact pin: the customer's own, or the assigned provider's after accepting */}
+      {contacts?.lat != null && contacts.lng != null && (isAdmin || ['NEW', 'MATCHING', 'ACCEPTED', 'ON_THE_WAY', 'IN_PROGRESS'].includes(req.status)) && (
+        <LocationCard
+          point={{ lat: contacts.lat, lng: contacts.lng }}
+          title={isCustomer ? 'بيتك على الخريطة' : 'موقع بيت الزبون'}
+          sendToPhone={isCustomer ? contacts.provider_phone : null}
+        />
+      )}
 
       {/* Timeline */}
       <Timeline req={req} />
