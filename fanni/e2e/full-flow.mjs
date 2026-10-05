@@ -30,8 +30,8 @@ async function shot(page, name) {
 }
 function ok(msg) { console.log(`  ✓ ${msg}`); }
 
-async function newUser() {
-  const ctx = await browser.newContext(device);
+async function newUser(opts = {}) {
+  const ctx = await browser.newContext({ ...device, ...opts });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.log('  [pageerror]', e.message));
   return page;
@@ -77,7 +77,8 @@ try {
 
   // ------------------------------------------------------------ customer request
   console.log('Customer journey');
-  const cust = await newUser();
+  // GPS near the shrine; the customer pins the house in the wizard
+  const cust = await newUser({ geolocation: { latitude: 32.6161234, longitude: 44.0249876 }, permissions: ['geolocation'] });
   // typed with Arabic digits + spaces, like many Iraqi keyboards do
   await register(cust, { role: 'customer', name: `سارة اختبار ${run}`, phone: toArabicDigits(`${CUST_PHONE.slice(0, 4)} ${CUST_PHONE.slice(4)}`) });
   ok('registered customer with phone number (Arabic digits)');
@@ -94,10 +95,15 @@ try {
   await shot(cust, 'wizard-description');
   await cust.getByRole('button', { name: 'التالي' }).click();
   await cust.locator('select').nth(2).selectOption('حي الحسين');
+  await cust.getByRole('button', { name: /حدد البيت على الخريطة/ }).click();
+  await cust.getByText('حرّك الخريطة لحد ما يصير الدبوس فوق بيتك بالضبط.').waitFor();
+  await cust.locator('.leaflet-container').waitFor();
+  await shot(cust, 'wizard-location-map');
   await cust.getByRole('button', { name: 'التالي' }).click();
   await cust.getByRole('button', { name: 'هسه (مستعجل)' }).click();
   await cust.getByRole('button', { name: 'التالي' }).click();
   await cust.getByText('راجع طلبك').waitFor();
+  await cust.getByText('📍 محدد').waitFor();
   await shot(cust, 'wizard-review');
   await cust.getByRole('button', { name: 'أرسل الطلب' }).click();
   await cust.getByText('تم إرسال طلبك').waitFor();
@@ -121,10 +127,17 @@ try {
   await shot(prov, 'provider-dashboard');
   await prov.goto(requestUrl);
   await prov.getByText('طلب جديد إلك').waitFor();
+  await prov.getByText('الزبون حدد بيته على الخريطة، يظهرلك بعد ما تقبل').waitFor();
+  if (await prov.getByText('موقع بيت الزبون').count()) throw new Error('exact location visible before accepting');
   await shot(prov, 'provider-offer');
   await prov.getByRole('button', { name: 'قبول الطلب' }).click();
   await prov.getByText(CUST_PHONE).waitFor();
-  ok('accepted; customer phone revealed');
+  await prov.getByText('موقع بيت الزبون').waitFor();
+  const dir = await prov.getByRole('link', { name: /الاتجاهات/ }).getAttribute('href');
+  if (!dir?.includes('destination=32.616123,44.024988')) throw new Error(`bad directions link: ${dir}`);
+  await prov.getByText('موقع بيت الزبون').scrollIntoViewIfNeeded();
+  await shot(prov, 'provider-location');
+  ok('accepted; customer phone + exact map pin revealed');
   await prov.getByRole('button', { name: /طالع بالطريق/ }).click();
   await prov.getByRole('button', { name: /وصلت وبديت الشغل/ }).click();
   await prov.getByRole('button', { name: /خلصت الشغل/ }).click();

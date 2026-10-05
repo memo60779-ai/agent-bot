@@ -173,4 +173,7 @@ export interface Contacts {
   provider_name: string | null;
   provider_phone: string | null;
   address_details: string | null;
+  /** exact pin: customer always; provider only after accepting */
+  lat: number | null;
+  lng: number | null;
 }
