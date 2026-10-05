@@ -115,6 +115,8 @@ select fanni_test.check_fails($q$select public.push_subscribe('http://evil.local
 select fanni_test.check_fails('select * from public.push_subscriptions', 'customer cannot read push_subscriptions');
 select fanni_test.check_fails('select public.push_service_config()', 'customer cannot read push keys/secret');
 select fanni_test.check_fails($q$select public.push_service_init('x', 'y')$q$, 'customer cannot set push keys');
+select fanni_test.check_fails('select * from public.admin_demand_stats(30)', 'customer cannot read demand stats');
+select fanni_test.check_fails('select private.alert_stale_requests()', 'customer cannot trigger stale alerts');
 select fanni_test.check((select count(*) from public.match_providers((select v from t_ids where k = 'req'))) = 4,
                      'matching returns 4 verified plumbers');
 select fanni_test.check((select provider_id from public.match_providers((select v from t_ids where k = 'req')) limit 1) = :provider,
