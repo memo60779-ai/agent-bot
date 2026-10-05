@@ -167,6 +167,7 @@ export function AdminProviders() {
               <div className="mt-1 flex items-center gap-3 text-sm">
                 <RatingInline avg={p.rating_avg} count={p.rating_count} />
                 <span className="text-gray-500">{p.completed_jobs} شغلة</span>
+                <span className="text-gray-400" dir="ltr">/p/{p.public_code}</span>
               </div>
             </div>
             <Badge tone={p.verification_status === 'verified' ? 'blue' : p.verification_status === 'rejected' ? 'red' : 'orange'}>

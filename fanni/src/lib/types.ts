@@ -51,6 +51,8 @@ export interface Provider {
   rating_count: number;
   completed_jobs: number;
   is_demo: boolean;
+  /** short public number for the share link /p/<code> */
+  public_code: number;
   created_at: string;
   services?: Pick<Service, 'id' | 'slug' | 'name_ar' | 'icon'> | null;
 }

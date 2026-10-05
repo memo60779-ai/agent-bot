@@ -125,6 +125,23 @@ try {
   await login(prov, 'provider@fanni.test');
   await prov.getByText('متاح الآن').first().waitFor();
   await shot(prov, 'provider-dashboard');
+  // share card: story image + personal link that opens the public profile
+  await prov.getByText('بطاقتك جاهزة').click();
+  await prov.locator('img[alt="بطاقة الفني"]').waitFor({ timeout: 20000 });
+  const cardLink = (await prov.locator('span[dir=ltr]').first().textContent()).trim();
+  const story = await prov.locator('img[alt="بطاقة الفني"]').evaluate(async (img) => {
+    const b = await (await fetch(img.src)).blob();
+    const bmp = await createImageBitmap(b);
+    const data = await new Promise((r) => { const fr = new FileReader(); fr.onload = () => r(String(fr.result).split(',')[1]); fr.readAsDataURL(b); });
+    return { w: bmp.width, h: bmp.height, data };
+  });
+  if (story.w !== 1080 || story.h !== 1920) throw new Error(`story size ${story.w}x${story.h}`);
+  writeFileSync(`${SHOTS}/story-card.png`, Buffer.from(story.data, 'base64'));
+  await shot(prov, 'provider-share-card');
+  await guest.goto(`http://${cardLink}`.replace(/^http:\/\/[^/]+/, APP));
+  await guest.getByText('حيدر كاظم للسباكة').first().waitFor();
+  await guest.getByRole('link', { name: /طلب الخدمة من/ }).waitFor();
+  ok(`share card 1080x1920 + link ${cardLink.replace(/^[^/]+/, '')} opens the profile`);
   await prov.goto(requestUrl);
   await prov.getByText('طلب جديد إلك').waitFor();
   await prov.getByText('الزبون حدد بيته على الخريطة، يظهرلك بعد ما تقبل').waitFor();
