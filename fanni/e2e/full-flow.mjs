@@ -16,7 +16,8 @@ const toArabicDigits = (v) => v.replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d])
 mkdirSync(SHOTS, { recursive: true });
 
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
-const device = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: 'ar-IQ' };
+// reducedMotion: page transitions would otherwise race Playwright's click hit-test
+const device = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: 'ar-IQ', reducedMotion: 'reduce' };
 
 // a tiny PNG used for photo / portfolio / ID uploads
 const png = Buffer.from(
@@ -264,10 +265,64 @@ try {
   await other.getByText('ما عندك صلاحية تشوفه').waitFor();
   ok('another customer cannot see the request');
 
+  // ------------------------------------------------------------ launch pack
+  console.log('Launch pack');
+  await cust.goto(requestUrl);
+  await cust.getByRole('link', { name: /مرة ثانية/ }).waitFor();
+  ok('completed request offers "book the same provider again"');
+
+  // forgot password: request -> admin confirms + sets a new password -> login works
+  const forgot = await newUser();
+  await forgot.goto(`${APP}/login`);
+  await forgot.getByRole('link', { name: 'نسيت الرمز؟' }).click();
+  await forgot.locator('form input').first().fill(CUST_PHONE);
+  await forgot.getByRole('button', { name: 'أرسل الطلب' }).click();
+  await forgot.getByText('وصل طلبك').first().waitFor();
+  await shot(forgot, 'forgot-sent');
+  admin.once('dialog', (d) => d.accept());
+  await admin.goto(`${APP}/admin/users`);
+  const reset = admin.locator('div.rounded-2xl', { hasText: CUST_PHONE }).first();
+  await reset.getByRole('button', { name: /عيّن رمز جديد/ }).click();
+  const newPw = (await admin.locator('b.font-mono').textContent()).trim();
+  await shot(admin, 'admin-password-reset');
+  await cust.goto(`${APP}/account`);
+  await cust.getByRole('button', { name: /تسجيل خروج/ }).click();
+  await cust.goto(`${APP}/login`);
+  await cust.locator('form input').nth(0).fill(CUST_PHONE);
+  await cust.fill('input[type=password]', newPw);
+  await cust.click('button[type=submit]');
+  await cust.waitForURL((u) => !u.pathname.startsWith('/login'));
+  ok('forgot password -> admin sets new password -> customer logs in');
+
+  // legal pages
+  await guest.goto(`${APP}/privacy`);
+  await guest.getByRole('heading', { name: 'المعلومات اللي نجمعها' }).waitFor();
+  await guest.goto(`${APP}/delete-account`);
+  await guest.getByRole('heading', { name: 'من داخل التطبيق' }).waitFor();
+  ok('privacy + account deletion pages are public');
+
+  // self-service deletion
+  await cust.goto(`${APP}/account`);
+  await cust.getByRole('button', { name: /حذف حسابي نهائياً/ }).click();
+  await cust.locator('input').last().fill('احذف');
+  await shot(cust, 'delete-account');
+  await cust.getByRole('button', { name: 'احذف حسابي' }).click();
+  await cust.waitForURL((u) => u.pathname === '/');
+  await cust.goto(`${APP}/login`);
+  await cust.locator('form input').nth(0).fill(CUST_PHONE);
+  await cust.fill('input[type=password]', newPw);
+  await cust.click('button[type=submit]');
+  await cust.getByText(/غلط|خطأ/).first().waitFor();
+  ok('customer deleted own account; login no longer works');
+
   console.log('\nALL E2E FLOWS PASSED');
 } catch (e) {
   console.error('\nE2E FAILED:', e.message);
   process.exitCode = 1;
+  let n = 0;
+  for (const p of browser.contexts().flatMap((c) => c.pages())) {
+    await p.screenshot({ path: `${SHOTS}/failure-${++n}.png` }).catch(() => null);
+  }
 } finally {
   await browser.close();
 }
