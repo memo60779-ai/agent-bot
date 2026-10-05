@@ -5,6 +5,7 @@ import { useAuth } from '../../lib/auth';
 import { Card, LinkButton, PageHeader } from '../../components/ui';
 import { ProviderForm } from './ProviderForm';
 import { PortfolioManager, VerificationPanel } from './shared';
+import { ShareCardLink } from './ShareCardLink';
 
 export default function ProfileEdit() {
   const { provider } = useAuth();
@@ -14,6 +15,7 @@ export default function ProfileEdit() {
   return (
     <div className="space-y-5">
       <PageHeader title="ملفي كفني" />
+      <ShareCardLink verified={provider.verification_status === 'verified'} />
       <LinkButton to={`/providers/${provider.id}`} variant="outline" full>
         <ExternalLink className="h-4 w-4" /> شوف ملفك مثل ما يشوفه الزبون
       </LinkButton>
