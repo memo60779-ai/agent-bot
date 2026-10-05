@@ -155,7 +155,17 @@ try {
   await prov.getByText('موقع بيت الزبون').scrollIntoViewIfNeeded();
   await shot(prov, 'provider-location');
   ok('accepted; customer phone + exact map pin revealed');
-  await prov.getByRole('button', { name: /طالع بالطريق/ }).click();
+  await prov.getByRole('radio', { name: /30/ }).click();
+  await prov.getByRole('button', { name: /طالع بالطريق.*30/ }).click();
+  await prov.getByText('وعدت الزبون توصل').waitFor();
+  await prov.getByRole('button', { name: /زيد 10 دقايق/ }).click();
+  await prov.getByText(/^(39|40)$/).waitFor();
+  // the customer sees the live countdown
+  await cust.goto(requestUrl);
+  await cust.getByText('الفني بالطريق، يوصل خلال').waitFor();
+  await cust.getByText(/الوصول حوالي/).waitFor();
+  await shot(cust, 'customer-eta');
+  ok('ETA picked (30) + extended (+10); customer sees countdown');
   await prov.getByRole('button', { name: /وصلت وبديت الشغل/ }).click();
   await prov.getByRole('button', { name: /خلصت الشغل/ }).click();
   await prov.locator('span', { hasText: 'اكتمل' }).first().waitFor();

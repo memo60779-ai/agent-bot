@@ -175,8 +175,21 @@ select fanni_test.check((select lat = 32.6161234 and lng = 44.0249876 from publi
                      'provider sees exact location after accepting');
 select fanni_test.check_fails(format($q$select public.update_request_status(%L, 'COMPLETED')$q$, (select v from t_ids where k = 'req')),
                      'provider cannot skip to COMPLETED');
-select public.update_request_status((select v from t_ids where k = 'req'), 'ON_THE_WAY');
+select fanni_test.check_fails(format('select public.start_trip(%L, 2)', (select v from t_ids where k = 'req')),
+                     'ETA must be 5..180 minutes');
+select public.start_trip((select v from t_ids where k = 'req'), 20);
+select fanni_test.check((select status = 'ON_THE_WAY' and eta_at between now() + interval '19 minutes' and now() + interval '21 minutes'
+                           and on_the_way_at is not null
+                         from public.service_requests where id = (select v from t_ids where k = 'req')),
+                     'start_trip -> ON_THE_WAY with ETA');
+select public.extend_eta((select v from t_ids where k = 'req'), 10);
+select fanni_test.check((select eta_at > now() + interval '29 minutes' from public.service_requests where id = (select v from t_ids where k = 'req')),
+                     'provider can extend the ETA');
 select public.update_request_status((select v from t_ids where k = 'req'), 'IN_PROGRESS');
+select fanni_test.check((select arrived_at is not null from public.service_requests where id = (select v from t_ids where k = 'req')),
+                     'arrival time stamped');
+select fanni_test.check((select trips >= 1 and on_time >= 1 from public.provider_punctuality(:provider)),
+                     'punctuality counts the on-time trip');
 
 -- the second provider can no longer accept
 select fanni_test.login(:other_provider);
@@ -189,6 +202,8 @@ select fanni_test.check_fails(format($q$select public.update_request_status(%L, 
 
 -- customer cannot cancel IN_PROGRESS
 select fanni_test.login(:customer);
+select fanni_test.check_fails(format('select public.extend_eta(%L, 10)', (select v from t_ids where k = 'req')),
+                     'customer cannot change the ETA');
 select fanni_test.check(public.push_status(), 'provider could not remove the customer push endpoint');
 select fanni_test.check_fails(format($q$select public.update_request_status(%L, 'CANCELLED')$q$, (select v from t_ids where k = 'req')),
                      'customer cannot cancel in-progress job');

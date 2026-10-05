@@ -87,6 +87,10 @@ export interface ServiceRequest {
   accepted_at: string | null;
   completed_at: string | null;
   cancelled_at: string | null;
+  /** promised arrival (provider picks it when leaving) */
+  eta_at: string | null;
+  on_the_way_at: string | null;
+  arrived_at: string | null;
   is_demo: boolean;
   created_at: string;
   updated_at: string;
