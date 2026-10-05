@@ -23,7 +23,7 @@ export default function ShareCard() {
   const verified = provider?.verification_status === 'verified';
 
   useEffect(() => {
-    if (!provider || !verified) return;
+    if (!provider || !verified || provider.public_code == null) return;
     let alive = true;
     renderStoryCard({
       name: provider.display_name,
@@ -55,6 +55,16 @@ export default function ShareCard() {
           <p className="font-bold text-ink">بطاقتك تجهز بعد توثيق حسابك</p>
           <p className="mt-1 text-sm text-gray-500">من توثّقك الإدارة، يصيرلك رابط خاص وصورة ستوري تنشرها لزبائنك.</p>
         </Card>
+      </div>
+    );
+  }
+
+  if (provider.public_code == null) {
+    // database update 20261006000009_provider_share.sql not applied yet
+    return (
+      <div className="space-y-4">
+        <PageHeader title="بطاقتي" back="/provider" />
+        <ErrorBox message="البطاقة بعدها ما مفعّلة من الإدارة. جرّب بعد شوية." />
       </div>
     );
   }
