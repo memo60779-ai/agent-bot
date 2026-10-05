@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Briefcase, CalendarDays, MapPin, Award, X } from 'lucide-react';
+import { Briefcase, CalendarDays, MapPin, Award, Share2, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { must, useLoad } from '../../lib/useLoad';
 import type { PortfolioItem, Provider, Review } from '../../lib/types';
@@ -10,8 +10,38 @@ import {
   AvailableBadge, Avatar, DemoBadge, EmptyState, ErrorBox, LinkButton, PageHeader, Spinner, Stars, Stat, VerifiedBadge,
 } from '../../components/ui';
 
-export default function ProviderProfile() {
-  const { id } = useParams();
+/** Share link /p/<code> -> the provider's public profile. */
+export function ProviderByCode() {
+  const { code } = useParams();
+  const { data, loading, error, reload } = useLoad(async () => {
+    if (!/^\d{1,9}$/.test(code ?? '')) return null;
+    return must(await supabase.from('providers').select('id').eq('public_code', Number(code)).maybeSingle()) as { id: string } | null;
+  }, [code]);
+  if (loading) return <Spinner className="pt-32" />;
+  if (error) return <div className="pt-6"><ErrorBox message={error} onRetry={reload} /></div>;
+  if (!data) {
+    return (
+      <div className="pt-6">
+        <PageHeader title="الفني" back="/" />
+        <EmptyState title="هذا الفني ما موجود أو غير متاح حالياً" />
+      </div>
+    );
+  }
+  return <ProviderProfile id={data.id} />;
+}
+
+async function shareProfile(name: string, code: number) {
+  const url = `${window.location.origin}/p/${code}`;
+  const text = `${name} على تطبيق «فني» 🔧`;
+  if (navigator.share) {
+    try { await navigator.share({ title: text, text, url }); return; } catch { return; }
+  }
+  window.open(`https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`, '_blank', 'noreferrer');
+}
+
+export default function ProviderProfile({ id: idProp }: { id?: string }) {
+  const params = useParams();
+  const id = idProp ?? params.id;
   const [lightbox, setLightbox] = useState<PortfolioItem | null>(null);
 
   const { data, loading, error, reload } = useLoad(async () => {
@@ -47,7 +77,19 @@ export default function ProviderProfile() {
 
   return (
     <div className="pb-36">
-      <PageHeader title="ملف الفني" back />
+      <PageHeader
+        title="ملف الفني"
+        back
+        action={
+          <button
+            onClick={() => shareProfile(p.display_name, p.public_code)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-card"
+            aria-label="مشاركة"
+          >
+            <Share2 className="h-5 w-5" />
+          </button>
+        }
+      />
 
       <div className="rounded-3xl bg-white p-5 text-center shadow-card">
         <div className="flex justify-center">

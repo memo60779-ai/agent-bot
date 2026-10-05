@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { Award, Briefcase, Inbox, MapPin, Star, Wrench } from 'lucide-react';
+import { Award, Briefcase, ChevronLeft, Inbox, MapPin, QrCode, Star, Wrench } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../lib/auth';
 import { must, useLoad } from '../../lib/useLoad';
@@ -104,6 +104,18 @@ export default function ProviderDashboard() {
       <ErrorBox message={error ?? data.error} />
       {!verified && <VerificationPanel />}
       <TelegramCard />
+      {verified && (
+        <Link to="/provider/card" className="pressable flex items-center gap-3 rounded-3xl bg-gradient-to-l from-accent to-[#FF9A3D] p-4 text-white shadow-card">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20">
+            <QrCode className="h-6 w-6" />
+          </span>
+          <span className="flex-1">
+            <span className="block font-extrabold">بطاقتك جاهزة 🎉</span>
+            <span className="block text-sm text-white/90">انشرها بالواتساب وخلّي زبائنك يطلبوك من فني</span>
+          </span>
+          <ChevronLeft className="h-5 w-5" />
+        </Link>
+      )}
       <InstallBanner text="ثبّت «فني» حتى توصل لطلباتك بضغطة وحدة" />
 
       <div className="grid grid-cols-3 gap-3">

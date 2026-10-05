@@ -145,6 +145,9 @@ select fanni_test.check_fails('select * from public.request_locations', 'provide
 update public.providers set verification_status = 'verified', rating_avg = 5, completed_jobs = 999 where id = :provider;
 select fanni_test.check((select completed_jobs from public.providers where id = :provider) < 999,
                      'provider cannot change counters/rating');
+update public.providers set public_code = 1 where id = :provider;
+select fanni_test.check((select public_code from public.providers where id = :provider) <> 1,
+                     'provider cannot change share code');
 -- cannot touch reviews
 update public.reviews set rating = 5, comment = 'hacked', is_hidden = true where provider_id = :provider;
 select fanni_test.check((select count(*) from public.reviews where comment = 'hacked') = 0, 'provider cannot modify reviews');

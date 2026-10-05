@@ -4,7 +4,7 @@ import { isConfigured } from './lib/supabase';
 import { AppShell, RequireAuth } from './components/Layout';
 import Home from './pages/customer/Home';
 import ServicePage from './pages/customer/ServicePage';
-import ProviderProfile from './pages/customer/ProviderProfile';
+import ProviderProfile, { ProviderByCode } from './pages/customer/ProviderProfile';
 import NewRequest from './pages/customer/NewRequest';
 import MyRequests from './pages/customer/MyRequests';
 import RequestDetail from './pages/RequestDetail';
@@ -15,6 +15,9 @@ import ProviderDashboard from './pages/provider/Dashboard';
 import ProfileEdit from './pages/provider/ProfileEdit';
 import { Spinner } from './components/ui';
 import { Logo } from './components/Logo';
+
+// Pulls in the QR/canvas code only when a provider opens it.
+const ShareCard = lazy(() => import('./pages/provider/ShareCard'));
 
 // Admin is only used by a few people: keep it out of the customer bundle.
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
@@ -50,6 +53,7 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="services/:slug" element={<ServicePage />} />
         <Route path="providers/:id" element={<ProviderProfile />} />
+        <Route path="p/:code" element={<ProviderByCode />} />
 
         {/* any signed-in user */}
         <Route path="request/new" element={<RequireAuth><NewRequest /></RequireAuth>} />
@@ -61,6 +65,7 @@ export default function App() {
         <Route path="provider" element={<RequireAuth role="provider"><ProviderDashboard /></RequireAuth>} />
         <Route path="provider/onboarding" element={<RequireAuth role="provider"><Onboarding /></RequireAuth>} />
         <Route path="provider/profile" element={<RequireAuth role="provider"><ProfileEdit /></RequireAuth>} />
+        <Route path="provider/card" element={<RequireAuth role="provider"><Suspense fallback={<Spinner />}><ShareCard /></Suspense></RequireAuth>} />
 
         {/* admin */}
         <Route path="admin" element={<RequireAuth role="admin"><Suspense fallback={<Spinner />}><AdminLayout /></Suspense></RequireAuth>}>
