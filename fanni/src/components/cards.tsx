@@ -3,7 +3,7 @@ import { ChevronLeft, MapPin, Briefcase } from 'lucide-react';
 import type { Provider, ServiceRequest } from '../lib/types';
 import { STATUS_LABEL, STATUS_TONE } from '../lib/constants';
 import { timeAgo } from '../lib/utils';
-import { AvailableBadge, Avatar, Badge, DemoBadge, RatingInline, VerifiedBadge } from './ui';
+import { AvailableBadge, Avatar, Badge, DemoBadge, FounderBadge, JobsOrYears, RatingInline, VerifiedBadge } from './ui';
 import { ServiceBadge } from './ServiceIcon';
 
 export function StatusBadge({ status }: { status: ServiceRequest['status'] }) {
@@ -20,12 +20,17 @@ export function ProviderCard({ p, action }: { p: Provider; action?: React.ReactN
             <span className="truncate font-bold text-ink">{p.display_name}</span>
             <DemoBadge show={p.is_demo} />
           </div>
-          <div className="mt-0.5 text-sm text-gray-500">{p.services?.name_ar}</div>
+          <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
+            {p.services?.name_ar}
+            <FounderBadge code={p.public_code} />
+          </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
             <RatingInline avg={p.rating_avg} count={p.rating_count} />
-            <span className="inline-flex items-center gap-1 text-gray-500">
-              <Briefcase className="h-3.5 w-3.5" /> {p.completed_jobs} شغلة
-            </span>
+            {(p.completed_jobs > 0 || p.years_experience > 0) && (
+              <span className="inline-flex items-center gap-1 text-gray-500">
+                <Briefcase className="h-3.5 w-3.5" /> <JobsOrYears jobs={p.completed_jobs} years={p.years_experience} />
+              </span>
+            )}
             <span className="inline-flex items-center gap-1 text-gray-500">
               <MapPin className="h-3.5 w-3.5" /> {p.area}
             </span>

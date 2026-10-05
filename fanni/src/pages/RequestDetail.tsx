@@ -468,8 +468,8 @@ function Matching({ req, onChange }: { req: ServiceRequest; onChange: () => void
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
                     <RatingInline avg={m.rating_avg} count={m.rating_count} />
-                    <span>{m.completed_jobs} شغلة</span>
-                    <span>{m.years_experience} سنين خبرة</span>
+                    {m.completed_jobs > 0 && <span>{m.completed_jobs} شغلة</span>}
+                    {m.years_experience > 0 && <span>{m.years_experience} سنين خبرة</span>}
                   </div>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     <VerifiedBadge />

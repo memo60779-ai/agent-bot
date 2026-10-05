@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Briefcase, CalendarDays, MapPin, Award, Share2, X } from 'lucide-react';
+import { Briefcase, CalendarDays, MapPin, Award, Share2, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { must, useLoad } from '../../lib/useLoad';
 import type { PortfolioItem, Provider, Review } from '../../lib/types';
 import { REVIEW_ASPECTS } from '../../lib/constants';
 import { formatDate, timeAgo } from '../../lib/utils';
 import {
-  AvailableBadge, Avatar, DemoBadge, EmptyState, ErrorBox, LinkButton, PageHeader, Spinner, Stars, Stat, VerifiedBadge,
+  AvailableBadge, Avatar, DemoBadge, EmptyState, ErrorBox, FounderBadge, LinkButton, PageHeader, Spinner, Stars, Stat, VerifiedBadge,
 } from '../../components/ui';
 
 /** Share link /p/<code> -> the provider's public profile. */
@@ -103,6 +103,7 @@ export default function ProviderProfile({ id: idProp }: { id?: string }) {
         <div className="mt-3 flex flex-wrap justify-center gap-2">
           {p.verification_status === 'verified' && <VerifiedBadge />}
           <AvailableBadge available={p.is_available} />
+          <FounderBadge code={p.public_code} />
           <DemoBadge show={p.is_demo} />
         </div>
         {punctuality && punctuality.trips >= 3 && (
@@ -118,12 +119,16 @@ export default function ProviderProfile({ id: idProp }: { id?: string }) {
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-3">
-        <Stat
-          label={`${p.rating_count} تقييم`}
-          value={p.rating_count ? Number(p.rating_avg).toFixed(1) : '—'}
-          icon={<Award className="h-5 w-5" />}
-        />
-        <Stat label="شغلة مكتملة" value={p.completed_jobs} icon={<Briefcase className="h-5 w-5" />} />
+        {p.rating_count ? (
+          <Stat label={`${p.rating_count} تقييم`} value={Number(p.rating_avg).toFixed(1)} icon={<Award className="h-5 w-5" />} />
+        ) : (
+          <Stat label="جديد على فني" value="🆕" icon={<Sparkles className="h-5 w-5" />} />
+        )}
+        {p.completed_jobs || p.verification_status !== 'verified' ? (
+          <Stat label="شغلة مكتملة" value={p.completed_jobs} icon={<Briefcase className="h-5 w-5" />} />
+        ) : (
+          <Stat label="موثّق بالهوية" value="✓" icon={<ShieldCheck className="h-5 w-5" />} />
+        )}
         <Stat label="سنين خبرة" value={p.years_experience} icon={<CalendarDays className="h-5 w-5" />} />
       </div>
 
