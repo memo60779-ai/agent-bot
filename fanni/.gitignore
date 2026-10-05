@@ -7,3 +7,4 @@ dev-dist
 test-results
 e2e/screenshots
 *.tsbuildinfo
+vite.config.ts.timestamp-*

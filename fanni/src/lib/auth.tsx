@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
+import { syncPush, unlinkPush } from './push';
 import type { Profile, Provider } from './types';
 
 interface AuthState {
@@ -28,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const { data: p } = await supabase.from('users').select('*').eq('id', s.user.id).maybeSingle();
     setProfile(p as Profile | null);
+    void syncPush(); // device already allowed notifications -> link it to this account
     if (p?.role === 'provider') {
       const { data: pr } = await supabase
         .from('providers')
@@ -62,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadProfile]);
 
   const signOut = useCallback(async () => {
+    await unlinkPush(); // this device stops getting this account's notifications
     await supabase.auth.signOut();
     setProfile(null);
     setProvider(null);

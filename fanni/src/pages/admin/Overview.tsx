@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase';
 import { useLoad } from '../../lib/useLoad';
 import { ErrorBox, Spinner } from '../../components/ui';
 import { TelegramCard } from '../provider/TelegramCard';
+import { PushCard } from '../../components/PushCard';
 
 interface Stats {
   customers: number; providers: number; verified_providers: number; pending_verifications: number;
@@ -49,6 +50,7 @@ export default function Overview() {
           <Clock className="h-6 w-6" /> {s.pending_verifications} طلب توثيق بانتظار المراجعة
         </Link>
       )}
+      <PushCard audience="admin" />
       <TelegramCard
         title="إشعارات الإدارة"
         text="تجيك رسالة على تليكرام أول ما يقدّم فني على التوثيق، حتى توافق بدقيقة."

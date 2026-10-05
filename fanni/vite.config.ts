@@ -26,6 +26,8 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/index.html',
+        // push notification handlers (public/push-sw.js)
+        importScripts: ['push-sw.js'],
         // never cache Supabase API calls
         runtimeCaching: [],
       },

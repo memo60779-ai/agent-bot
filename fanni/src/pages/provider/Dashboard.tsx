@@ -12,6 +12,7 @@ import { Badge, DemoBadge, EmptyState, ErrorBox, Spinner, Stars, Stat } from '..
 import { VerificationPanel } from './shared';
 import { TelegramCard } from './TelegramCard';
 import { ShareCardLink } from './ShareCardLink';
+import { PushCard } from '../../components/PushCard';
 import { InstallBanner } from '../../components/InstallApp';
 
 type Tab = 'new' | 'active' | 'history';
@@ -104,6 +105,7 @@ export default function ProviderDashboard() {
 
       <ErrorBox message={error ?? data.error} />
       {!verified && <VerificationPanel />}
+      <PushCard audience="provider" />
       <TelegramCard />
       <ShareCardLink verified={verified} />
       <InstallBanner text="ثبّت «فني» حتى توصل لطلباتك بضغطة وحدة" />
