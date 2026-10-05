@@ -16,6 +16,7 @@ import { StatusBadge } from '../components/cards';
 import { ServiceBadge } from '../components/ServiceIcon';
 import { LocationCard } from '../components/LocationMap';
 import { PushCard } from '../components/PushCard';
+import { EtaCard } from '../components/EtaCard';
 import {
   Avatar, Badge, Button, Card, DemoBadge, EmptyState, ErrorBox, Field, Input, LinkButton, PageHeader, RatingInline,
   Spinner, StarInput, Stars, Textarea, VerifiedBadge,
@@ -119,6 +120,11 @@ export default function RequestDetail() {
             </p>
           </div>
         </div>
+      )}
+
+      {/* On the way: live countdown for everyone involved */}
+      {req.status === 'ON_THE_WAY' && req.eta_at && (
+        <EtaCard etaAt={req.eta_at} startedAt={req.on_the_way_at} forProvider={isAssigned} />
       )}
 
       {/* Customer: get told when a provider accepts / is on the way */}
@@ -351,9 +357,12 @@ function ContactRow({ title, name, phone, avatar, link }: {
   );
 }
 
+const ETA_CHOICES = [10, 20, 30, 45, 60];
+
 function ProviderProgress({ req, busy, act }: {
   req: ServiceRequest; busy: boolean; act: (fn: () => PromiseLike<{ error: unknown }>) => Promise<void>;
 }) {
+  const [minutes, setMinutes] = useState(20);
   const set = (s: string) => () => act(() => supabase.rpc('update_request_status', { p_request_id: req.id, p_status: s }));
   if (!['ACCEPTED', 'ON_THE_WAY', 'IN_PROGRESS'].includes(req.status)) return null;
   return (
@@ -361,11 +370,41 @@ function ProviderProgress({ req, busy, act }: {
       <p className="mb-1 font-bold text-ink">حدّث حالة الشغل</p>
       {req.status === 'ACCEPTED' && (
         <>
-          <Button full loading={busy} onClick={set('ON_THE_WAY')}>طالع بالطريق 🚗</Button>
+          <p className="text-sm text-gray-500">شكد تحتاج حتى توصل؟ الزبون يشوف عداد وينتظرك بالوقت.</p>
+          <div className="grid grid-cols-5 gap-1.5" role="radiogroup" aria-label="وقت الوصول">
+            {ETA_CHOICES.map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="radio"
+                aria-checked={minutes === m}
+                onClick={() => setMinutes(m)}
+                className={cn(
+                  'pressable rounded-xl border py-2 text-center text-sm font-bold transition',
+                  minutes === m ? 'border-primary bg-primary text-white' : 'border-gray-200 bg-white text-ink',
+                )}
+              >
+                {m}<span className="block text-[10px] font-semibold opacity-75">دقيقة</span>
+              </button>
+            ))}
+          </div>
+          <Button full loading={busy} onClick={() => act(() => supabase.rpc('start_trip', { p_request_id: req.id, p_minutes: minutes }))}>
+            طالع بالطريق 🚗 · أوصل خلال {minutes} د
+          </Button>
           <Button full variant="outline" disabled={busy} onClick={set('IN_PROGRESS')}>وصلت وبديت الشغل</Button>
         </>
       )}
-      {req.status === 'ON_THE_WAY' && <Button full loading={busy} onClick={set('IN_PROGRESS')}>وصلت وبديت الشغل 🔧</Button>}
+      {req.status === 'ON_THE_WAY' && (
+        <>
+          <Button full loading={busy} onClick={set('IN_PROGRESS')}>وصلت وبديت الشغل 🔧</Button>
+          {req.eta_at && (
+            <Button full variant="outline" size="md" disabled={busy}
+              onClick={() => act(() => supabase.rpc('extend_eta', { p_request_id: req.id, p_minutes: 10 }))}>
+              ⏱️ راح أتأخر، زيد 10 دقايق
+            </Button>
+          )}
+        </>
+      )}
       {req.status === 'IN_PROGRESS' && <Button full variant="accent" loading={busy} onClick={set('COMPLETED')}>خلصت الشغل ✅</Button>}
       {['ACCEPTED', 'ON_THE_WAY'].includes(req.status) && (
         <Button full variant="ghost" size="md" disabled={busy} onClick={() => {

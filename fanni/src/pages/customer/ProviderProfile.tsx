@@ -45,16 +45,19 @@ export default function ProviderProfile({ id: idProp }: { id?: string }) {
   const [lightbox, setLightbox] = useState<PortfolioItem | null>(null);
 
   const { data, loading, error, reload } = useLoad(async () => {
-    const [p, portfolio, reviews] = await Promise.all([
+    const [p, portfolio, reviews, punct] = await Promise.all([
       supabase.from('providers').select('*, services(id, slug, name_ar, icon)').eq('id', id!).maybeSingle(),
       supabase.from('provider_portfolio').select('*').eq('provider_id', id!).order('created_at', { ascending: false }),
       supabase.from('reviews').select('*').eq('provider_id', id!).eq('is_hidden', false)
         .order('created_at', { ascending: false }).limit(30),
+      supabase.rpc('provider_punctuality', { p_provider_id: id! }),
     ]);
     return {
       provider: must(p) as Provider | null,
       portfolio: must(portfolio) as PortfolioItem[],
       reviews: must(reviews) as Review[],
+      // older databases without the ETA update simply show nothing
+      punctuality: ((punct.data as { trips: number; on_time: number }[] | null) ?? [])[0] ?? null,
     };
   }, [id]);
 
@@ -68,7 +71,7 @@ export default function ProviderProfile({ id: idProp }: { id?: string }) {
       </div>
     );
   }
-  const { provider: p, portfolio, reviews } = data;
+  const { provider: p, portfolio, reviews, punctuality } = data;
 
   const aspectAvg = (key: (typeof REVIEW_ASPECTS)[number]['key']) => {
     const vals = reviews.map((r) => r[key]).filter((v): v is number => v != null);
@@ -102,6 +105,11 @@ export default function ProviderProfile({ id: idProp }: { id?: string }) {
           <AvailableBadge available={p.is_available} />
           <DemoBadge show={p.is_demo} />
         </div>
+        {punctuality && punctuality.trips >= 3 && (
+          <p className="mx-auto mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-bold text-emerald-700">
+            ⏱️ وصل بالوقت {punctuality.on_time} من {punctuality.trips} مرات
+          </p>
+        )}
         {p.is_demo && (
           <p className="mt-3 rounded-xl bg-accent-50 p-2 text-xs text-accent-600">
             هذا ملف تجريبي لأغراض الاختبار، مو فني حقيقي.
