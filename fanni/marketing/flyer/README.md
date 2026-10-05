@@ -7,7 +7,6 @@
 ```bash
 cd fanni/marketing/flyer
 npm i @fontsource/tajawal qrcode playwright
-SIGNUP_URL="https://fanniapp-iq.vercel.app/register?role=provider" \
-SHOW_URL="fanniapp-iq.vercel.app" node build.mjs
+SIGNUP_URL="https://faniy.app/join" SHOW_URL="faniy.app/join" node build.mjs
 ```
 (build.mjs يقرأ الشعار من `fanni/src/assets/fanni-mark.svg` والأيقونات من `fanni/node_modules/lucide-react`.)

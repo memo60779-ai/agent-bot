@@ -4,7 +4,7 @@ import QRCode from 'qrcode';
 import { chromium } from 'playwright';
 
 const APP = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
-const URL = process.env.SIGNUP_URL || 'https://fanniapp-iq.vercel.app/register?role=provider';
+const URL = process.env.SIGNUP_URL || 'https://faniy.app/join';
 const SHOW_URL = process.env.SHOW_URL || URL.replace(/^https:\/\//, '');
 
 const font = (w) => readFileSync(`node_modules/@fontsource/tajawal/files/tajawal-arabic-${w}-normal.woff2`).toString('base64');
