@@ -11,11 +11,16 @@ export default defineConfig({
       manifest: {
         name: 'فني — خدمات البيت بكربلاء',
         short_name: 'فني',
-        description: 'اطلب فني موثوق قريب منك: سباكة، كهرباء، تبريد، نجارة وغيرها',
+        description: 'اطلب سبّاك، كهربائي، تبريد أو صيانة بكربلاء. فنيين موثّقين ويجون بوقتهم.',
+        // stable identity for installs and the Android (TWA) package
+        id: '/',
         lang: 'ar',
         dir: 'rtl',
         start_url: '/',
+        scope: '/',
         display: 'standalone',
+        orientation: 'portrait',
+        categories: ['lifestyle', 'utilities'],
         background_color: '#F7F8FA',
         theme_color: '#203048',
         icons: [
