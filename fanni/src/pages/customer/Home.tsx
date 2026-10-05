@@ -11,6 +11,7 @@ import { ProviderCard, RequestCard } from '../../components/cards';
 import { ErrorBox, Spinner } from '../../components/ui';
 import { Logo } from '../../components/Logo';
 import { InstallBanner } from '../../components/InstallApp';
+import { SocialIcons } from '../../components/SocialLinks';
 import heroImg from '../../assets/hero-electrician.webp';
 
 export default function Home() {
@@ -175,10 +176,13 @@ export default function Home() {
         </Link>
       )}
 
-      <p className="flex justify-center gap-4 pt-2 text-xs text-gray-400">
-        <Link to="/privacy">سياسة الخصوصية</Link>
-        <Link to="/terms">شروط الاستخدام</Link>
-      </p>
+      <div className="flex flex-col items-center gap-3 pt-2">
+        <SocialIcons />
+        <p className="flex justify-center gap-4 text-xs text-gray-400">
+          <Link to="/privacy">سياسة الخصوصية</Link>
+          <Link to="/terms">شروط الاستخدام</Link>
+        </p>
+      </div>
     </div>
   );
 }

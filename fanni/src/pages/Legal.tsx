@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { PageHeader } from '../components/ui';
+import { SocialIcons } from '../components/SocialLinks';
 
 // Public pages linked from the store listing (privacy policy, account deletion)
 // and from the app. Keep them in plain language and in sync with what the app
@@ -17,6 +18,7 @@ function Doc({ title, children }: { title: string; children: ReactNode }) {
         <p className="border-t border-gray-100 pt-4 text-sm text-gray-500">
           آخر تحديث: {UPDATED} · للتواصل: <a className="text-primary" href={`mailto:${CONTACT}`} dir="ltr">{CONTACT}</a>
         </p>
+        <SocialIcons />
       </article>
     </div>
   );
