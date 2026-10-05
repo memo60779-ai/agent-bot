@@ -8,6 +8,7 @@ import { errorMessage, isPhoneAccount, publicUrl, uploadFile } from '../lib/util
 import { Avatar, Badge, Button, Card, ErrorBox, Field, Input, PageHeader, Select } from '../components/ui';
 import { InstallButton } from '../components/InstallApp';
 import { PushCard } from '../components/PushCard';
+import { FollowUsCard } from '../components/SocialLinks';
 
 const ROLE_LABEL = { customer: 'زبون', provider: 'فني', admin: 'مدير' } as const;
 
@@ -97,6 +98,8 @@ export default function Account() {
 
       <PushCard audience={profile?.role === 'provider' ? 'provider' : profile?.role === 'admin' ? 'admin' : 'customer'} settings />
       <InstallButton />
+
+      <FollowUsCard />
 
       <ChangePassword />
 
