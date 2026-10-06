@@ -19,7 +19,7 @@ export default function Verifications() {
       .order('created_at', { ascending: false });
     if (filter !== 'all') q = q.eq('status', filter);
     return must(await q) as VerificationRequest[];
-  }, [filter]);
+  }, [filter], { autoRefreshMs: 30_000 });
 
   return (
     <div className="space-y-3">

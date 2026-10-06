@@ -97,7 +97,7 @@ export default function Overview() {
       // older databases without the stale-alert update simply hide the table
       demand: (demand.data as DemandRow[] | null) ?? null,
     };
-  });
+  }, [], { autoRefreshMs: 30_000 });
 
   if (loading) return <Spinner />;
   if (error || !data) return <ErrorBox message={error} onRetry={reload} />;
