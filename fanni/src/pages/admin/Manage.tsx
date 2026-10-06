@@ -58,7 +58,7 @@ function PasswordResets() {
     const { data, error } = await supabase.rpc('admin_password_resets');
     if (error) throw error;
     return data as ResetRow[];
-  });
+  }, [], { autoRefreshMs: 30_000 });
   const [given, setGiven] = useState<{ name: string; phone: string; pw: string } | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -363,7 +363,7 @@ export function AdminRequests() {
     if (status === 'active') q = q.in('status', ['NEW', 'MATCHING', 'ACCEPTED', 'ON_THE_WAY', 'IN_PROGRESS']);
     else if (status !== 'all') q = q.eq('status', status);
     return must(await q) as ServiceRequest[];
-  }, [status]);
+  }, [status], { autoRefreshMs: 30_000 });
 
   return (
     <div className="space-y-3">
@@ -398,7 +398,7 @@ export function AdminComplaints() {
     let q = supabase.from('complaints').select('*').order('created_at', { ascending: false });
     if (status !== 'all') q = q.eq('status', status);
     return must(await q) as Complaint[];
-  }, [status]);
+  }, [status], { autoRefreshMs: 30_000 });
 
   return (
     <div className="space-y-3">
